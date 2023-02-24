@@ -91,8 +91,13 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [ ] Replace Arrow usage with straight array usage. (Remember, I copied this project over from a subproject in my `arrow-playground`
-  repo)
+* [ ] IN PROGRESS Replace Arrow usage with straight array usage. (Remember, I copied this project over from a subproject in my `arrow-playground`
+  repo). I think I'll create loading code (file I/O, JSON parsing) and keep it decoupled from the generic columnar
+  code (it's own JPMS module) and then create a bridge module that describes the geograhies data using the APIs of the
+  columnar/engine module.
+  * DONE (it's just a package not a JPMS module) Create the loader module. (glue code)
+  * Create the columnar data store module. (generic/API/high-value code)
+  * Create the bridge module (glue code)
 * [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.
 * [ ] Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
   and do a query by something like "find states adjacent to states that have at least a ZIP code with a population of 1,000,000"

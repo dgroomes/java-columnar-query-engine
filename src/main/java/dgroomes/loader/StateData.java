@@ -1,4 +1,6 @@
-package dgroomes;
+package dgroomes.loader;
+
+import dgroomes.geography.State;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,8 +10,6 @@ import java.util.List;
  * Hardcoded data about US states.
  */
 public class StateData {
-
-  record State(String code, String name) {}
 
   public static List<State> STATES;
 
