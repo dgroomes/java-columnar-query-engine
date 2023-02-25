@@ -1,23 +1,19 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-
 plugins {
-    java
+    id("dgroomes.conventions")
     application
-}
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
     implementation(libs.slf4j.api)
     implementation(libs.slf4j.simple)
-    implementation(platform(libs.jackson.bom))
+    implementation(project(":geography-loader"))
+    implementation(project(":util"))
+//    implementation(project(":query-engine"))
+//    implementation(project(":geography-query"))
 
     implementation(libs.arrow.vector)
     implementation(libs.arrow.algorithm)
     implementation(libs.arrow.memory.netty)
-    implementation(libs.jackson.databind)
 
     testImplementation(libs.assertj)
     testImplementation(libs.junit.jupiter.api)
@@ -25,7 +21,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("dgroomes.Runner")
+    mainClass.set("dgroomes.app.Runner")
 }
 
 tasks {
@@ -41,11 +37,6 @@ tasks {
     }
 
     test {
-        useJUnitPlatform()
-        testLogging {
-            exceptionFormat = TestExceptionFormat.FULL
-        }
-
         jvmArgs = listOf(
             "--add-opens=java.base/java.nio=ALL-UNNAMED",
         )

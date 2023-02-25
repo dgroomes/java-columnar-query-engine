@@ -61,6 +61,23 @@ Or something cyclic like:
 
 Simple requirements. That allows the focus to be on the implementation.
 
+The code is implemented across a few modules:
+
+* `query-engine`
+  * NOT YET IMPLEMENTED
+  * This module is the actual query engine. It's the most interesting module. 
+* `geography`
+  * This module is a pure domain model. It has zero dependencies by design. It models the ZIP, city and
+  state data which we can collectively refer to as "geography" for short.
+* `geography-loader`
+  * This module is responsible for loading the data from disk (JSON) into memory (Java domain objects). It's a
+  "glue" module that is not very interesting.
+* `geography-query`
+  * NOT YET IMPLEMENTED
+  * This module is an application of the query engine over the geography domain. This is an interesting module. 
+* `app`
+  * This module is the entrypoint of the project. It's a "glue" module.
+
 
 ## Prior Art
 
@@ -71,6 +88,9 @@ it I still think the barrier to entry is quite high; especially when you compare
 implementation like I want to do here (well I'm using SLF4J and Jackson to load the data). I like Rust for this workload
 but no I don't want to be constrained by ownership/borrowing. I'm in "query engine learning mode" not "Rust learning mode".
 
+[DuckDB](https://github.com/duckdb/duckdb) is another OLAP database (columnar) and it is well-loved by developers and offers lots of features. I bet I
+could learn by building it from source and poking around. Although it's C++ so that's another learning curve for me.
+
 
 ## Instructions
 
@@ -79,7 +99,7 @@ Follow these instructions to build and run the example program:
 1. Use Java 19
 2. Build and run the program:
    * ```shell
-     ./gradlew run
+     ./gradlew :app:run
      ```
 3. Run the tests:
    * ```shell
@@ -96,6 +116,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   code (it's own JPMS module) and then create a bridge module that describes the geograhies data using the APIs of the
   columnar/engine module.
   * DONE (it's just a package not a JPMS module) Create the loader module. (glue code)
+  * DONE Create Gradle subprojects (and JPMS modularized). I'm kind of dragging my feet by doing this but I like this style.
   * Create the columnar data store module. (generic/API/high-value code)
   * Create the bridge module (glue code)
 * [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.
