@@ -26,10 +26,14 @@ public sealed interface ObjectGraph {
     return new Column.IntegerColumn(ints);
   }
 
+  static Column.StringColumn ofStrings(String... strings) {
+    return new Column.StringColumn(strings);
+  }
+
   /**
    * Convenience method for creating an {@link Column.IntegerColumn} for toy examples, like in test cases.
    */
-  static MultiColumnEntity of(Column... columns) {
+  static MultiColumnEntity ofColumns(Column... columns) {
     return new MultiColumnEntity(List.of(columns));
   }
 
