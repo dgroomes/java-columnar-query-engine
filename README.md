@@ -117,7 +117,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   columnar/engine module.
   * DONE (it's just a package not a JPMS module) Create the loader module. (glue code)
   * DONE Create Gradle subprojects (and JPMS modularized). I'm kind of dragging my feet by doing this but I like this style.
-  * Create the columnar data store module. (generic/API/high-value code)
+  * IN PROGRESS Create the columnar data store module. (generic/API/high-value code)
   * Create the bridge module (glue code)
 * [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.
 * [ ] Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
