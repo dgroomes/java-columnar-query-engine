@@ -2,7 +2,9 @@ package dgroomes.queryengine;
 
 import dgroomes.queryengine.ObjectGraph.Column.IntegerColumn;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.stream.IntStream;
 
 /**
@@ -73,13 +75,45 @@ public class Executor {
         var msg = "The object graph type '%s' cannot be queried by query type '%s'".formatted(objectGraph.getClass().getSimpleName(), query.getClass().getSimpleName());
         return new QueryResult.Failure(msg);
       }
+    } else if (query instanceof Query.PointerSingleFieldStringQuery(
+            Query.Pointer pointer, Query.StringCriteria stringCriteria
+    )) {
+      // todo implement a recursive/iterative search algorithm. Here is some hard work.
+      //
+      // Algorithm working notes. We need to descend the object graph following the pointer, all the while verifying that
+      // the pointer is "legal" (meaning it follows columns that exist and all the columns are association columns except
+      // for the last one which is a string column). When we reach the end of the pointer, we can apply the string criteria.
+      // But then we have to follow back up the pointer and prune the object graph.
+
+      if (objectGraph instanceof ObjectGraph.MultiColumnEntity multiColumnEntity) {
+        ObjectGraph.MultiColumnEntity pruned;
+        Deque<ObjectGraph.Column> columns = new ArrayDeque<>();
+
+        record PointedEntity(ObjectGraph.MultiColumnEntity entity, Query.Pointer pointer) {}
+
+        ObjectGraph.MultiColumnEntity currentEntity = multiColumnEntity;
+        Query.Pointer currentPointer = pointer;
+        while (true) {
+          if (currentPointer instanceof Query.Pointer.Ordinal(int ordinal)) {
+            // todo
+          } else {
+            // todo
+          }
+          return new QueryResult.Failure("Not yet implemented");
+        }
+
+        //        return new QueryResult.Failure("Not yet implemented");
+      } else {
+        var msg = "The object graph type '%s' cannot be queried by query type '%s'".formatted(objectGraph.getClass().getSimpleName(), query.getClass().getSimpleName());
+        return new QueryResult.Failure(msg);
+      }
     } else {
       var msg = "This query type is not yet implemented: %s".formatted(query.getClass().getSimpleName());
       return new QueryResult.Failure(msg);
     }
   }
 
-  sealed interface QueryResult permits QueryResult.Success, QueryResult.Failure {
+  public sealed interface QueryResult permits QueryResult.Success, QueryResult.Failure {
     record Success(Object matches) implements QueryResult {
     }
 

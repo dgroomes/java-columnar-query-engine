@@ -118,7 +118,9 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE (it's just a package not a JPMS module) Create the loader module. (glue code)
   * DONE Create Gradle subprojects (and JPMS modularized). I'm kind of dragging my feet by doing this but I like this style.
   * IN PROGRESS Create the query engine module. (generic/API/high-value code)
-  *   IN PROGRESS solve associations
+  *   DONE Start associations
+  *   IN PROGRESS two-way associations
+  *   Query over associations (I have a test case but the code is going to take a lot of work)
   * Load the geography data into the appropriate in-memory format.
   * Create the bridge module (glue code)
 * [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.
@@ -142,3 +144,9 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [ ] Consider splitting apart a query verifier from a query planner from a query executor (and maybe even a query
   optimizer but I don't think I care to do that). I'm already finding that there is too much verification logic in the
   engine code which I'd rather be used just for execution.
+* [ ] Consider modelling a `Column` API so that the backing datastore can be swapped out. For example, I'm starting with
+  simple arrays but I want to use compressed data structures using something like JavaFastPFOR and I might want to use the
+  foreign memory API if I figure out that that's the best way to ensure that the data is laid out compactly (plus I want
+  to learn the API).
+* [ ] Drop the 'single field' object graph type. I just want to model a "table" or maybe "collection" to use Mongo's term
+  which is good because it disambiguates it from SQL.

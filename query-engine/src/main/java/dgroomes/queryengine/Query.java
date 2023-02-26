@@ -15,9 +15,24 @@ public sealed interface Query {
     boolean match(int integerUnderTest);
   }
 
+  interface StringCriteria {
+    boolean match(String stringUnderTest);
+  }
+
   non-sealed interface SingleFieldIntegerQuery extends Query, IntCriteria {
   }
 
   record OrdinalSingleFieldIntegerQuery(int ordinal, IntCriteria intCriteria) implements Query {
+  }
+
+  // note: most of these interfaces/records are temporary. more comprehensive designs will surface.
+  // This is a single-field query directed by a "pointer" to the field-under-test.
+  record PointerSingleFieldStringQuery(Pointer pointer, StringCriteria stringCriteria) implements Query {}
+
+  sealed interface Pointer {
+    record Ordinal(int ordinal) implements Pointer {}
+
+    // This is a nested pointer. This is the unit of recursion.
+    record NestedPointer(int ordinal, Pointer pointer) implements Pointer {}
   }
 }

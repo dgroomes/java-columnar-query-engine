@@ -1,5 +1,6 @@
 package dgroomes.queryengine;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,20 +38,48 @@ public sealed interface ObjectGraph {
     return new MultiColumnEntity(List.of(columns));
   }
 
+  static Association.None toNone() { return Association.None.NONE;}
+
+  static Association.One toOne(int idx) { return new Association.One(idx);}
+
+  static Association.Many toMany(int... indices) { return new Association.Many(indices);}
+
+  sealed interface Association {
+    None NONE = new None();
+    final class None implements Association {
+      private None() {}
+    }
+    record One(int idx) implements Association {}
+    record Many(int[] indices) implements Association {}
+  }
+
   /**
    * Note: for a toy query engine, we can get away with using a minimal set of column types. We cover three points on the
    * data spectrum: boolean (single bit), integer (32 bits), and string (variable length). Covering other types would be
    * redundant for learning but they would be needed in a real/useful implementation.
    */
   sealed interface Column {
+
     record BooleanColumn(boolean[] bools) implements Column, ObjectGraph {}
 
     record IntegerColumn(int[] ints) implements Column, ObjectGraph {}
 
     record StringColumn(String[] strings) implements Column, ObjectGraph {}
+
+    // Note: maybe modelling an association as a column of the entity is a bad idea. After all, the association is
+    // usually goes both ways (bi-directional) in meaning. For example, a city is contained in a state and that state
+    // also contains the city. There is a case for uni-directional associations, but I'm not there right now.
+    record AssociationColumn(ObjectGraph associatedEntity, Association[] associations) implements Column {}
   }
 
   record MultiColumnEntity(List<? extends Column> columns) implements ObjectGraph {
+
+    MultiColumnEntity associateTo(ObjectGraph associatedEntity, Association... associations) {
+      List<Column> newColumns =  new ArrayList<>(this.columns());
+      var associationColumn = new Column.AssociationColumn(associatedEntity, associations);
+      newColumns.add(associationColumn);
+      return new MultiColumnEntity(newColumns);
+    }
 
     /**
      * Prune the multi-column entity down to the rows at the given indices. This is designed to be used after query
