@@ -117,7 +117,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   columnar/engine module.
   * DONE (it's just a package not a JPMS module) Create the loader module. (glue code)
   * DONE Create Gradle subprojects (and JPMS modularized). I'm kind of dragging my feet by doing this but I like this style.
-  * IN PROGRESS Create the columnar data store module. (generic/API/high-value code)
+  * IN PROGRESS Create the query engine module. (generic/API/high-value code)
   * Create the bridge module (glue code)
 * [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.
 * [ ] Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
@@ -135,3 +135,8 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [ ] Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
+* [ ] Consider creating performance benchmarks. Consider using [Java MicroBenchmark Harness](https://github.com/openjdk/jmh)..
+  Be careful with the benchmarks. Don't draw overly broad conclusions.
+* [ ] Consider splitting apart a query verifier from a query planner from a query executor (and maybe even a query
+  optimizer but I don't think I care to do that). I'm already finding that there is too much verification logic in the
+  engine code which I'd rather be used just for execution.

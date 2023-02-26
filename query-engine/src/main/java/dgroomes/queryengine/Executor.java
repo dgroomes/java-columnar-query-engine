@@ -22,10 +22,17 @@ public class Executor {
    * schema?), return a list of matching records.
    * <p>
    * Tentative decision: this does not return a cursor.
+   * <p>
    * Tentative decision: this returns a pruned object graph of values. For direct arrays, this is simple. Given an array
    * of integers, return an array of the matching integers. For multi-column graphs, consider an object graph that
    * represents a city. It has two columns: "city_name" and "state code". Return a new multi-column graph where its
    * component columns are pruned down to the entries that matched the criteria. (this is a squishy concept for me..).
+   * <p>
+   * Tentative decision: it's ok to not parse criteria like "x < 5" and instead just use lambda. In this way, we can't
+   * do a whole category of optimization but I don't care to do that.
+   * <p>
+   * Decision: full scans are good. I don't care about indexing. This data is in-memory and we want to support criteria
+   * like regex which can't take advantage of indexes anyway.
    * <p>
    * I don't care much about generics here. I just want to get something working.
    */

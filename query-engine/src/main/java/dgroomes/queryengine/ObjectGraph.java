@@ -37,6 +37,11 @@ public sealed interface ObjectGraph {
     return new MultiColumnEntity(List.of(columns));
   }
 
+  /**
+   * Note: for a toy query engine, we can get away with using a minimal set of column types. We cover three points on the
+   * data spectrum: boolean (single bit), integer (32 bits), and string (variable length). Covering other types would be
+   * redundant for learning but they would be needed in a real/useful implementation.
+   */
   sealed interface Column {
     record BooleanColumn(boolean[] bools) implements Column, ObjectGraph {}
 
