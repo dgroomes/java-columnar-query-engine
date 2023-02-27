@@ -1,7 +1,9 @@
 package dgroomes.queryengine;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * WORK IN PROGRESS
@@ -38,18 +40,28 @@ public sealed interface ObjectGraph {
     return new MultiColumnEntity(List.of(columns));
   }
 
-  static Association.None toNone() { return Association.None.NONE;}
+  static Association.None toNone() {
+    return Association.None.NONE;
+  }
 
-  static Association.One toOne(int idx) { return new Association.One(idx);}
+  static Association.One toOne(int idx) {
+    return new Association.One(idx);
+  }
 
-  static Association.Many toMany(int... indices) { return new Association.Many(indices);}
+  static Association.Many toMany(int... indices) {
+    return new Association.Many(indices);
+  }
 
   sealed interface Association {
     None NONE = new None();
+
     final class None implements Association {
-      private None() {}
+      private None() {
+      }
     }
+
     record One(int idx) implements Association {}
+
     record Many(int[] indices) implements Association {}
   }
 
@@ -72,13 +84,48 @@ public sealed interface ObjectGraph {
     record AssociationColumn(ObjectGraph associatedEntity, Association[] associations) implements Column {}
   }
 
-  record MultiColumnEntity(List<? extends Column> columns) implements ObjectGraph {
+  record MultiColumnEntity(List<Column> columns) implements ObjectGraph {
 
-    MultiColumnEntity associateTo(ObjectGraph associatedEntity, Association... associations) {
-      List<Column> newColumns =  new ArrayList<>(this.columns());
+    /**
+     * Associate this entity (X) to another entity (Y).
+     */
+    void associateTo(MultiColumnEntity associatedEntity, Association... associations) {
       var associationColumn = new Column.AssociationColumn(associatedEntity, associations);
-      newColumns.add(associationColumn);
-      return new MultiColumnEntity(newColumns);
+      // Note: yes this is nasty; we are using a mutable data structure. I love using records, but I often wind up with
+      // a need to mutate it and struggle.
+      this.columns.add(associationColumn);
+
+      // Create a reverse association from Y to X.
+      //
+      // Note: this is some stream of consciousness code and needs to be cleaned up.
+      Column.AssociationColumn reverseAssociations;
+      {
+        var yIndexToXAssociations = new HashMap<Integer, List<Integer>>();
+        for (int xIndex = 0; xIndex < associations.length; xIndex++) {
+          int[] yIndices = switch (associations[xIndex]) {
+            case Association.One(var idx) -> new int[]{idx};
+            case Association.Many(var indices) -> indices;
+            case Association.None ignored -> new int[]{};
+          };
+
+          for (int yIndex = 0; yIndex < yIndices.length; yIndex++) {
+            var yToX = yIndexToXAssociations.computeIfAbsent(yIndex, ignored -> new ArrayList<>());
+            yToX.add(xIndex);
+          }
+        }
+
+        Association[] yToXAssociations = IntStream.range(0, associations.length).mapToObj(yIndex -> {
+          List<Integer> xIndices = yIndexToXAssociations.get(yIndex);
+          return switch (xIndices.size()) {
+            case 0 -> Association.None.NONE;
+            case 1 -> new Association.One(xIndices.get(0));
+            default -> new Association.Many(xIndices.stream().mapToInt(i -> i).toArray());
+          };
+        }).toArray(Association[]::new);
+        reverseAssociations = new Column.AssociationColumn(this, yToXAssociations);
+      }
+
+      associatedEntity.columns().add(reverseAssociations);
     }
 
     /**
@@ -88,32 +135,40 @@ public sealed interface ObjectGraph {
     public MultiColumnEntity prune(int[] indices) {
 
       // Clone each column and prune the data set down to the given indices
-      // TODO refactor this to use a visitor pattern or whatever.
-      List<? extends Column> prunedColumns = columns.stream()
-              .map(column -> {
-                if (column instanceof Column.BooleanColumn boolColumn) {
+      // TODO clean this up.
+      List<Column> prunedColumns = columns.stream()
+              .<Column>map(column -> switch (column) {
+                case Column.BooleanColumn boolColumn -> {
                   var bools = boolColumn.bools();
                   var pruned = new boolean[indices.length];
                   for (int i = 0; i < indices.length; i++) {
                     pruned[i] = bools[indices[i]];
                   }
-                  return new Column.BooleanColumn(pruned);
-                } else if (column instanceof Column.IntegerColumn intColumn) {
+                  yield new Column.BooleanColumn(pruned);
+                }
+                case Column.IntegerColumn intColumn -> {
                   var ints = intColumn.ints();
                   var pruned = new int[indices.length];
                   for (int i = 0; i < indices.length; i++) {
                     pruned[i] = ints[indices[i]];
                   }
-                  return new Column.IntegerColumn(pruned);
-                } else if (column instanceof Column.StringColumn stringColumn) {
+                  yield new Column.IntegerColumn(pruned);
+                }
+                case Column.StringColumn stringColumn -> {
                   var strings = stringColumn.strings();
                   var pruned = new String[indices.length];
                   for (int i = 0; i < indices.length; i++) {
                     pruned[i] = strings[indices[i]];
                   }
-                  return new Column.StringColumn(pruned);
-                } else {
-                  throw new RuntimeException("Unexpected column type: " + column.getClass().getSimpleName());
+                  yield new Column.StringColumn(pruned);
+                }
+                case Column.AssociationColumn associationColumn -> {
+                  var associations = associationColumn.associations();
+                  var pruned = new Association[indices.length];
+                  for (int i = 0; i < indices.length; i++) {
+                    pruned[i] = associations[indices[i]];
+                  }
+                  yield new Column.AssociationColumn(associationColumn.associatedEntity(), pruned);
                 }
               })
               .toList();
