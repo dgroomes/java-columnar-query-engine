@@ -109,7 +109,6 @@ public class QueryEngineTest {
    * Specifically, let's model cities, states and the "contained in" association from city to state.
    */
   @Test
-  @Disabled("not yet implemented")
   void queryOnAssociationProperty() {
     MultiColumnEntity cities = ofColumns(ofStrings("Minneapolis", "Pierre", "Duluth"));
     MultiColumnEntity states = ofColumns(ofStrings("Minnesota", "South Dakota"));
@@ -119,24 +118,47 @@ public class QueryEngineTest {
             toOne(0) /* Minneapolis is contained in Minnesota */,
             toOne(1) /* Pierre is contained in South Dakota */,
             toOne(0) /* Duluth is contained in Minnesota */);
-    // todo I need to create a query type that can express this query.
-    // Note: 1 is the ordinal position of the "contained in" association column to the state collection.
-    // 0 is the ordinal position of the state name column in the state collection.
-    var query = new Query.PointerSingleFieldStringQuery(new Query.Pointer.NestedPointer(1, new Query.Pointer.Ordinal(0)), stateNameUnderTest -> stateNameUnderTest.startsWith("South"));
+    // Note: '1' is the ordinal position of the "contained in" association column to the state collection.
+    // '0' is the ordinal position of the state name column in the state collection.
 
-    // Act
-    QueryResult result = Executor.match(query, cities);
+    // Query for South Dakota cities
+    {
+      var query = new Query.PointerSingleFieldStringQuery(new Query.Pointer.NestedPointer(1, new Query.Pointer.Ordinal(0)), "South Dakota"::equals);
 
-    // Assert
-    assertThat(result).isInstanceOf(Success.class);
-    Success success = (Success) result;
-    Object matches = success.matches();
-    assertThat(matches).isInstanceOf(MultiColumnEntity.class);
-    MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
-    assertThat(multiColumnEntityMatches.columns()).hasSize(2);
-    ObjectGraph.Column cityColumn = multiColumnEntityMatches.columns().get(0);
-    assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
-    var cityMatches = (Column.StringColumn) cityColumn;
-    assertThat(cityMatches.strings()).containsExactly("Pierre");
+      // Act
+      QueryResult result = Executor.match(query, cities);
+
+      // Assert
+      assertThat(result).isInstanceOf(Success.class);
+      Success success = (Success) result;
+      Object matches = success.matches();
+      assertThat(matches).isInstanceOf(MultiColumnEntity.class);
+      MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
+      assertThat(multiColumnEntityMatches.columns()).hasSize(2);
+      ObjectGraph.Column cityColumn = multiColumnEntityMatches.columns().get(0);
+      assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
+      var cityMatches = (Column.StringColumn) cityColumn;
+      assertThat(cityMatches.strings()).containsExactly("Pierre");
+    }
+
+    // Query for Minnesota cities
+    {
+      var query = new Query.PointerSingleFieldStringQuery(new Query.Pointer.NestedPointer(1, new Query.Pointer.Ordinal(0)), "Minnesota"::equals);
+
+      // Act
+      QueryResult result = Executor.match(query, cities);
+
+      // Assert
+      assertThat(result).isInstanceOf(Success.class);
+      Success success = (Success) result;
+      Object matches = success.matches();
+      assertThat(matches).isInstanceOf(MultiColumnEntity.class);
+      MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
+      assertThat(multiColumnEntityMatches.columns()).hasSize(2);
+      ObjectGraph.Column cityColumn = multiColumnEntityMatches.columns().get(0);
+      assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
+      var cityMatches = (Column.StringColumn) cityColumn;
+      assertThat(cityMatches.strings()).containsExactly("Minneapolis", "Duluth");
+    }
   }
 }

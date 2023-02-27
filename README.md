@@ -117,10 +117,10 @@ General clean-ups, TODOs and things I wish to implement for this project:
   columnar/engine module.
   * DONE (it's just a package not a JPMS module) Create the loader module. (glue code)
   * DONE Create Gradle subprojects (and JPMS modularized). I'm kind of dragging my feet by doing this but I like this style.
-  * IN PROGRESS Create the query engine module. (generic/API/high-value code)
+  * DONE (extremely rough but working) Create the query engine module. (generic/API/high-value code)
   *   DONE Start associations
-  *   IN PROGRESS two-way associations
-  *   Query over associations (I have a test case but the code is going to take a lot of work)
+  *   DONE two-way associations
+  *   DONE Query over associations (I have a test case but the code is going to take a lot of work)
   * Load the geography data into the appropriate in-memory format.
   * Create the bridge module (glue code)
 * [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.

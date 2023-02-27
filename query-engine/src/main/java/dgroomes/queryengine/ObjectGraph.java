@@ -1,6 +1,7 @@
 package dgroomes.queryengine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -37,7 +38,8 @@ public sealed interface ObjectGraph {
    * Convenience method for creating an {@link Column.IntegerColumn} for toy examples, like in test cases.
    */
   static MultiColumnEntity ofColumns(Column... columns) {
-    return new MultiColumnEntity(List.of(columns));
+    var mutableList = new ArrayList<>(Arrays.asList(columns));
+    return new MultiColumnEntity(mutableList);
   }
 
   static Association.None toNone() {
@@ -81,13 +83,43 @@ public sealed interface ObjectGraph {
     // Note: maybe modelling an association as a column of the entity is a bad idea. After all, the association is
     // usually goes both ways (bi-directional) in meaning. For example, a city is contained in a state and that state
     // also contains the city. There is a case for uni-directional associations, but I'm not there right now.
-    record AssociationColumn(ObjectGraph associatedEntity, Association[] associations) implements Column {}
+    final class AssociationColumn implements Column {
+
+      public final MultiColumnEntity associatedEntity;
+      public final Association[] associations;
+
+      // The dreaded bootstrapping problem with cyclic data structures. This has to be initialized later than the
+      // constructor and this is why this class can't be a record.
+      private AssociationColumn reverseAssociatedColumn;
+
+      public AssociationColumn(MultiColumnEntity associatedEntity, Association[] associations) {
+        this.associatedEntity = associatedEntity;
+        this.associations = associations;
+      }
+
+      public void setReverseAssociatedColumn(AssociationColumn reverseAssociatedColumn) {
+        if (this.reverseAssociatedColumn != null) {
+          throw new IllegalStateException("reverseAssociatedColumn is already set");
+        }
+        this.reverseAssociatedColumn = reverseAssociatedColumn;
+      }
+
+      public AssociationColumn reverseAssociatedColumn() {
+        if (reverseAssociatedColumn == null) {
+          throw new IllegalStateException("reverseAssociatedColumn was never set");
+        }
+        return reverseAssociatedColumn;
+      }
+    }
   }
 
   record MultiColumnEntity(List<Column> columns) implements ObjectGraph {
 
     /**
      * Associate this entity (X) to another entity (Y).
+     *
+     * @param associatedEntity the entity type to associate to (Y)
+     * @param associations     the associations from this entity (X) to the associated entity (Y)
      */
     void associateTo(MultiColumnEntity associatedEntity, Association... associations) {
       var associationColumn = new Column.AssociationColumn(associatedEntity, associations);
@@ -98,7 +130,7 @@ public sealed interface ObjectGraph {
       // Create a reverse association from Y to X.
       //
       // Note: this is some stream of consciousness code and needs to be cleaned up.
-      Column.AssociationColumn reverseAssociations;
+      Column.AssociationColumn reverseAssociationColumn;
       {
         var yIndexToXAssociations = new HashMap<Integer, List<Integer>>();
         for (int xIndex = 0; xIndex < associations.length; xIndex++) {
@@ -108,13 +140,13 @@ public sealed interface ObjectGraph {
             case Association.None ignored -> new int[]{};
           };
 
-          for (int yIndex = 0; yIndex < yIndices.length; yIndex++) {
+          for (int yIndex : yIndices) {
             var yToX = yIndexToXAssociations.computeIfAbsent(yIndex, ignored -> new ArrayList<>());
             yToX.add(xIndex);
           }
         }
 
-        Association[] yToXAssociations = IntStream.range(0, associations.length).mapToObj(yIndex -> {
+        Association[] yToXAssociations = IntStream.range(0, associatedEntity.size()).mapToObj(yIndex -> {
           List<Integer> xIndices = yIndexToXAssociations.get(yIndex);
           return switch (xIndices.size()) {
             case 0 -> Association.None.NONE;
@@ -122,10 +154,23 @@ public sealed interface ObjectGraph {
             default -> new Association.Many(xIndices.stream().mapToInt(i -> i).toArray());
           };
         }).toArray(Association[]::new);
-        reverseAssociations = new Column.AssociationColumn(this, yToXAssociations);
+        reverseAssociationColumn = new Column.AssociationColumn(this, yToXAssociations);
+        reverseAssociationColumn.setReverseAssociatedColumn(associationColumn);
+        associationColumn.setReverseAssociatedColumn(reverseAssociationColumn);
       }
 
-      associatedEntity.columns().add(reverseAssociations);
+      associatedEntity.columns().add(reverseAssociationColumn);
+    }
+
+    // This is silly.
+    private int size() {
+      Column column = columns.get(0);
+      return switch (column) {
+        case Column.BooleanColumn boolColumn -> boolColumn.bools().length;
+        case Column.IntegerColumn intColumn -> intColumn.ints().length;
+        case Column.StringColumn stringColumn -> stringColumn.strings().length;
+        case Column.AssociationColumn associationColumn -> associationColumn.associations.length;
+      };
     }
 
     /**
@@ -163,17 +208,17 @@ public sealed interface ObjectGraph {
                   yield new Column.StringColumn(pruned);
                 }
                 case Column.AssociationColumn associationColumn -> {
-                  var associations = associationColumn.associations();
+                  var associations = associationColumn.associations;
                   var pruned = new Association[indices.length];
                   for (int i = 0; i < indices.length; i++) {
                     pruned[i] = associations[indices[i]];
                   }
-                  yield new Column.AssociationColumn(associationColumn.associatedEntity(), pruned);
+                  yield new Column.AssociationColumn(associationColumn.associatedEntity, pruned);
                 }
               })
               .toList();
 
-      return new MultiColumnEntity(prunedColumns);
+      return new MultiColumnEntity(new ArrayList<>(prunedColumns));
     }
   }
 }
