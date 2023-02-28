@@ -55,16 +55,39 @@ public sealed interface ObjectGraph {
   }
 
   sealed interface Association {
+
+    Association add(int idx);
+
     None NONE = new None();
 
     final class None implements Association {
       private None() {
       }
+
+      @Override
+      public Association add(int idx) {
+        return new Association.One(idx);
+      }
     }
 
-    record One(int idx) implements Association {}
+    record One(int idx) implements Association {
 
-    record Many(int[] indices) implements Association {}
+      @Override
+      public Association add(int idx) {
+        return new Association.Many(new int[]{this.idx, idx});
+      }
+    }
+
+
+    record Many(int[] indices) implements Association {
+      @Override
+      public Association add(int idx) {
+        var newIndices = new int[indices.length + 1];
+        System.arraycopy(indices, 0, newIndices, 0, indices.length);
+        newIndices[indices.length] = idx;
+        return new Association.Many(newIndices);
+      }
+    }
   }
 
   /**
@@ -163,7 +186,7 @@ public sealed interface ObjectGraph {
     }
 
     // This is silly.
-    private int size() {
+    public int size() {
       Column column = columns.get(0);
       return switch (column) {
         case Column.BooleanColumn boolColumn -> boolColumn.bools().length;

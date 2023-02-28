@@ -2,9 +2,6 @@
 # SLF4J releases: http://www.slf4j.org/news.html
 slf4j = "2.0.6"
 
-# Apache Arrow releases: https://arrow.apache.org/release/
-arrow = "11.0.0"
-
 # Jackson releases: https://github.com/FasterXML/jackson/wiki/Jackson-Releases
 # Make sure to align with the major version of Jackson that Arrow uses.
 # See https://github.com/apache/arrow/blob/f10f5cfd1376fb0e602334588b3f3624d41dee7d/java/pom.xml#L39
@@ -20,9 +17,6 @@ assertj = "3.24.2"
 [libraries]
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
-arrow-vector = { module = "org.apache.arrow:arrow-vector", version.ref = "arrow" }
-arrow-algorithm = { module = "org.apache.arrow:arrow-algorithm", version.ref = "arrow" }
-arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-netty", version.ref = "arrow" }
 jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }

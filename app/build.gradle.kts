@@ -11,10 +11,6 @@ dependencies {
 //    implementation(project(":query-engine"))
 //    implementation(project(":geography-query"))
 
-    implementation(libs.arrow.vector)
-    implementation(libs.arrow.algorithm)
-    implementation(libs.arrow.memory.netty)
-
     testImplementation(libs.assertj)
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
@@ -33,12 +29,14 @@ tasks {
             //
             // See https://arrow.apache.org/docs/java/install.html#java-compatibility
             "--add-opens=java.base/java.nio=ALL-UNNAMED",
+            "--enable-preview"
         )
     }
 
     test {
         jvmArgs = listOf(
             "--add-opens=java.base/java.nio=ALL-UNNAMED",
+            "--enable-preview"
         )
     }
 }

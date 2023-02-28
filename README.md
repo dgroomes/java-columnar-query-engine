@@ -121,8 +121,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   *   DONE Start associations
   *   DONE two-way associations
   *   DONE Query over associations (I have a test case but the code is going to take a lot of work)
-  * Load the geography data into the appropriate in-memory format.
-  * Create the bridge module (glue code)
+  * DONE Load the geography data into the appropriate in-memory format.
 * [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.
 * [ ] Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
   and do a query by something like "find states adjacent to states that have at least a ZIP code with a population of 1,000,000"

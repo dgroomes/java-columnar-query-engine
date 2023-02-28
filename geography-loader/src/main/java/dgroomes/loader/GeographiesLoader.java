@@ -59,7 +59,7 @@ public class GeographiesLoader {
 
         Zip zip;
         {
-          String zipCode = zipNode.get("_id").asText();
+          int zipCode = Integer.parseInt(zipNode.get("_id").asText());
           int pop = zipNode.get("pop").asInt();
           zip = new Zip(zipCode, pop);
         }

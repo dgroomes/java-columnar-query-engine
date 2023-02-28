@@ -5,20 +5,16 @@ import dgroomes.geography.GeographyGraph;
 import dgroomes.geography.State;
 import dgroomes.geography.Zip;
 import dgroomes.loader.GeographiesLoader;
-import dgroomes.loader.StateData;
+import dgroomes.queryengine.ObjectGraph;
+import dgroomes.queryengine.ObjectGraph.Association;
 import dgroomes.util.Util;
-import org.apache.arrow.memory.BufferAllocator;
-import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.VarCharVector;
-import org.apache.arrow.vector.complex.reader.FieldReader;
-import org.apache.arrow.vector.table.Row;
-import org.apache.arrow.vector.table.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Please see the README for more information.
@@ -27,9 +23,6 @@ public class Runner {
 
   private static final Logger log = LoggerFactory.getLogger(Runner.class);
 
-  List<Zip> zips;
-  private GeographyGraph g;
-
   public static void main(String[] args) {
     new Runner().execute();
   }
@@ -37,92 +30,153 @@ public class Runner {
   public void execute() {
 
     // Read the ZIP code data from the local JSON file.
+    GeographyGraph geo;
     {
       File zipsFile = new File("../zips.jsonl");
       if (!zipsFile.exists()) {
         String msg = "The 'zips.jsonl' file could not be found (%s). You need to run this program from the 'app/' directory.".formatted(zipsFile.getAbsolutePath());
         throw new RuntimeException(msg);
       }
-      g = GeographiesLoader.loadFromFile(zipsFile);
-      zips = List.copyOf(g.zips());
+      geo = GeographiesLoader.loadFromFile(zipsFile);
     }
 
-    // Load the in-memory ZIP and city data from Java objects into Apache Arrow's in-memory data structures.
-    try (BufferAllocator allocator = new RootAllocator();
-         IntVector zipCodeVector = new IntVector("zip-codes", allocator);
-         VarCharVector cityNameVector = new VarCharVector("city-names", allocator);
-         VarCharVector stateCodeVector = new VarCharVector("state-codes", allocator);
-         IntVector populationVector = new IntVector("populations", allocator);
-         VarCharVector stateStateCodeVector = new VarCharVector("state-state-codes", allocator);
-         VarCharVector stateStateNameVector = new VarCharVector("state-state-names", allocator)) {
+    // Load the ZIP data into the in-memory table/column format.
+    ObjectGraph.MultiColumnEntity zipsTable;
+    ObjectGraph.Column.IntegerColumn zipCodeColumn;
+    ObjectGraph.Column.IntegerColumn zipPopulationColumn;
+    ObjectGraph.Column.AssociationColumn zipCityColumn;
 
-      // Load the state data into vectors
-      int statesSize = StateData.STATES.size();
-      for (int i = 0; i < statesSize; i++) {
-        State state = StateData.STATES.get(i);
-        stateStateCodeVector.setSafe(i, state.code().getBytes());
-        stateStateNameVector.setSafe(i, state.name().getBytes());
+    ObjectGraph.MultiColumnEntity citiesTable;
+    ObjectGraph.Column.StringColumn cityNameColumn;
+    ObjectGraph.Column.AssociationColumn cityZipColumn;
+    ObjectGraph.Column.AssociationColumn cityStateColumn;
+
+    ObjectGraph.MultiColumnEntity statesTable;
+    ObjectGraph.Column.StringColumn stateCodeColumn;
+    ObjectGraph.Column.StringColumn stateNameColumn;
+    ObjectGraph.Column.AssociationColumn stateCityColumn;
+
+    {
+      // Load the state data into the in-memory format
+      //
+      // This is phase one of two phases. In the first phase, we can only load columns that correspond to "direct data"
+      // like the state name and state code. We can't load the association column ("contains cities") yet because the
+      // cities table has not be created. This is a classic bootstrapping problem. The order that we bootstrap is
+      // arbitrary. We just have to pick one. The map object is used to do the association work later.
+      Map<State, Integer> stateToColumnIndex = new HashMap<>();
+      {
+        Set<State> states = geo.states();
+        int statesSize = states.size();
+        String[] stateCodes = new String[statesSize],
+                stateNames = new String[statesSize];
+
+        int i = 0;
+        for (State state : states) {
+          stateToColumnIndex.put(state, i);
+          stateCodes[i] = state.code();
+          stateNames[i] = state.name();
+          i++;
+        }
+
+        stateCodeColumn = new ObjectGraph.Column.StringColumn(stateCodes);
+        stateNameColumn = new ObjectGraph.Column.StringColumn(stateNames);
+        statesTable = ObjectGraph.ofColumns(stateCodeColumn, stateNameColumn);
       }
 
-      stateStateCodeVector.setValueCount(statesSize);
-      stateStateNameVector.setValueCount(statesSize);
+      // Load the city data into the in-memory format.
+      //
+      // Similarly, we need a map that tracks cities to their column indices so that the cities table can be associated
+      // with the ZIP table.
+      //
+      // Also, because the states data was already initialized, we can associate the cities rows to their state rows
+      // and vice versa.
+      Map<City, Integer> cityToColumnIndex = new HashMap<>();
+      {
+        Set<City> cities = geo.cities();
+        int citiesSize = cities.size();
+        String[] cityNames = new String[citiesSize];
+        Association[] cityStateAssociations = new Association[citiesSize];
+        Association[] stateCitiesAssociations = new Association[citiesSize];
+        int i = 0;
+        for (City city : cities) {
+          cityToColumnIndex.put(city, i);
+          cityNames[i] = city.name();
+          State state = city.state(geo);
+          int stateColumnIndex = stateToColumnIndex.get(state);
 
-      int zipValuesSize = zips.size();
+          // Associate the city to the state (easy because a city is contained in exactly one state)
+          cityStateAssociations[i] = new Association.One(stateColumnIndex);
 
-      zipCodeVector.allocateNew(zipValuesSize);
-      // Notice that we don't set the size because we don't know how many bytes the city names and state codes are going
-      // to take. This is the nature of using a variable-sized data type, like "var char".
-      cityNameVector.allocateNew();
-      stateCodeVector.allocateNew();
-      populationVector.allocateNew(zipValuesSize);
+          // Associate the state to the city (a bit more work because a state contains many cities)
+          {
+            Association existingAssociation = stateCitiesAssociations[stateColumnIndex];
+            Association incrementedAssociation = switch (existingAssociation) {
+              case null -> new Association.One(i);
+              case Association a -> a.add(i);
+            };
+            stateCitiesAssociations[stateColumnIndex] = incrementedAssociation;
+          }
+          i++;
+        }
 
-      for (int i = 0; i < zipValuesSize; i++) {
-        Zip zip = zips.get(i);
-        zipCodeVector.set(i, Integer.parseInt(zip.zipCode()));
-        City city = zip.city(g);
-        State state = city.state(g);
-
-        // The "safe" version of the set method automatically grows the vector if it's not big enough to hold the new value.
-        cityNameVector.setSafe(i, city.name().getBytes());
-        stateCodeVector.setSafe(i, state.code().getBytes());
-        populationVector.set(i, zip.population());
+        cityNameColumn = new ObjectGraph.Column.StringColumn(cityNames);
+        cityStateColumn = new ObjectGraph.Column.AssociationColumn(statesTable, cityStateAssociations);
+        citiesTable = ObjectGraph.ofColumns(cityNameColumn, cityStateColumn);
       }
 
-      // TODO figure out how to use the state data as a "dictionary encoding" or whatever in the ZIP code data.
 
-      // Necessary boilerplate to tell Apache Arrow that we're done adding values to the vectors, and to restate the
-      // number of values in each vector.
-      zipCodeVector.setValueCount(zipValuesSize);
-      cityNameVector.setValueCount(zipValuesSize);
-      stateCodeVector.setValueCount(zipValuesSize);
-      populationVector.setValueCount(zipValuesSize);
+      // Load the ZIP data into the in-memory format.
+      {
+        var zipValuesSize = geo.zips().size();
+        int[] codes = new int[zipValuesSize],
+                populations = new int[zipValuesSize];
+        Association[] zipCityAssociations = new Association[zipValuesSize];
+        Association[] cityZipAssociations = new Association[zipValuesSize];
 
-      log.info("Loaded {} ZIP codes into Apache Arrow vectors (arrays)", Util.formatInteger(zipValuesSize));
+        int i = 0;
+        for (Zip zip : geo.zips()) {
+          codes[i] = zip.zipCode();
+          populations[i] = zip.population();
+          City city = zip.city(geo);
+          int cityIndex = cityToColumnIndex.get(city);
+
+          // Associate the ZIP to the city (easy because a ZIP is contained in exactly one city)
+          zipCityAssociations[i] = new Association.One(cityIndex);
+
+          // Associate the city to the ZIP (a bit more work because a city can contain many ZIPs
+          {
+            Association existingAssociation = cityZipAssociations[cityIndex];
+            Association incrementedAssociation = switch (existingAssociation) {
+              case null -> new Association.One(i);
+              case Association a -> a.add(i);
+            };
+            cityZipAssociations[cityIndex] = incrementedAssociation;
+          }
+          i++;
+        }
+
+        zipCodeColumn = new ObjectGraph.Column.IntegerColumn(codes);
+        zipPopulationColumn = new ObjectGraph.Column.IntegerColumn(populations);
+        zipCityColumn = new ObjectGraph.Column.AssociationColumn(citiesTable, zipCityAssociations);
+        zipsTable = ObjectGraph.ofColumns(zipCodeColumn, zipPopulationColumn, zipCityColumn);
+        citiesTable.columns().add(new ObjectGraph.Column.AssociationColumn(zipsTable, cityZipAssociations));
+      }
 
       // TODO load the state adjacencies into Apache Arrow vectors
       // How should "many-to-may mapping data" be represented in Arrow data structures? I mean, I want a hash/dictionary
       // but all Arrow has is vectors. It has a dictionary type but it's like a thin wrapper over vectors (I think).
       // I think I want a vector of integer arrays to represent state to state adjacencies... not 100%.
 
-      // Turn it into an Arrow table
-      try (Table zipTable = new Table(List.of(zipCodeVector, cityNameVector, stateCodeVector, populationVector), zipValuesSize)) {
-
-        // I want to scan the population vector and find the max value and then find the ZIP code, city, and state of
-        // that ZIP code. I think this is a basic thing to do in Arrow. The FieldReader interface has a huge API
-        // surface area.
-        //
-        // Let's iterate over a few rows.
+      {
+        // Do a simple scan and determine the ZIP with the highest population.
         int maxPopulation = -1;
         int maxPopulationIndex = -1;
 
-        FieldReader populationReader = zipTable.getReader("populations");
-
-        for (int i = 0; i < zipValuesSize; i++) {
-          populationReader.setPosition(i);
-          int pop = populationReader.readInteger();
+        for (int i = 0; i < zipsTable.size(); i++) {
+          var pop = zipPopulationColumn.ints()[i];
           if (pop > maxPopulation) {
             maxPopulation = pop;
-            maxPopulationIndex = populationReader.getPosition();
+            maxPopulationIndex = i;
           }
         }
 
@@ -130,9 +184,12 @@ public class Runner {
           throw new IllegalStateException("The max population index was never set.");
         }
 
-        Row maxPopulationZip = zipTable.immutableRow().setPosition(maxPopulationIndex);
-
-        log.info("The ZIP code with the highest population is {} in {}, {} with a population of {}.", maxPopulationZip.getInt("zip-codes"), maxPopulationZip.getVarCharObj("city-names"), maxPopulationZip.getVarCharObj("state-codes"), Util.formatInteger(maxPopulation));
+        int code = zipCodeColumn.ints()[maxPopulationIndex];
+        int cityIndex = ((Association.One) zipCityColumn.associations[maxPopulationIndex]).idx();
+        String city = cityNameColumn.strings()[cityIndex];
+        int stateIndex = ((Association.One) cityStateColumn.associations[cityIndex]).idx();
+        String stateCode = stateCodeColumn.strings()[stateIndex];
+        log.info("The ZIP code with the highest population is {} in {}, {} with a population of {}.", code, city, stateCode, Util.formatInteger(maxPopulation));
       }
 
       // TODO the rest (and hard part) of the program...
