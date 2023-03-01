@@ -55,9 +55,9 @@ When it comes to the workload of the queries, I want to execute a query like:
 > "Springfield".
 
 
-Or something cyclic like:
+Or something cyclic (although contrived) like:
 
-> Find all states 
+> Find all states named with "North" that are adjacent to a state with "South" that are adjacent to a state with "North".
 
 Simple requirements. That allows the focus to be on the implementation.
 
@@ -111,7 +111,7 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [ ] IN PROGRESS Replace Arrow usage with straight array usage. (Remember, I copied this project over from a subproject in my `arrow-playground`
+* [x] DONE Replace Arrow usage with straight array usage. (Remember, I copied this project over from a subproject in my `arrow-playground`
   repo). I think I'll create loading code (file I/O, JSON parsing) and keep it decoupled from the generic columnar
   code (it's own JPMS module) and then create a bridge module that describes the geograhies data using the APIs of the
   columnar/engine module.
@@ -129,9 +129,8 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Define the adjacencies data.
   * DONE Define the state data (code and name).
   * DONE Incorporate the state data into the Arrow data model.
-  * How to relate the ZIP code "rows" to the entries in the state vector? I can do it by hand, but is this what Arrow's
-    dictionary encoder is for?
-  * Load the adjacencies data into vectors
+  * IN PROGRESS Load the adjacencies data into the in-memory format.
+  * Implement a query across state adjacencies data.
 * [ ] Create a generic graph API plus a (overtly simple) query execution engine. The graph API only
   supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
   words for this right now).
