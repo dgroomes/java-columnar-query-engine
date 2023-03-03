@@ -5,6 +5,7 @@ import dgroomes.geography.GeographyGraph;
 import dgroomes.geography.State;
 import dgroomes.geography.Zip;
 import dgroomes.loader.GeographiesLoader;
+import dgroomes.loader.StateData;
 import dgroomes.queryengine.ObjectGraph;
 import dgroomes.queryengine.ObjectGraph.Association;
 import dgroomes.util.Util;
@@ -15,6 +16,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Please see the README for more information.
@@ -162,10 +165,34 @@ public class Runner {
         citiesTable.columns().add(new ObjectGraph.Column.AssociationColumn(zipsTable, cityZipAssociations));
       }
 
-      // TODO load the state adjacencies into Apache Arrow vectors
-      // How should "many-to-may mapping data" be represented in Arrow data structures? I mean, I want a hash/dictionary
-      // but all Arrow has is vectors. It has a dictionary type but it's like a thin wrapper over vectors (I think).
-      // I think I want a vector of integer arrays to represent state to state adjacencies... not 100%.
+      // Load the state adjacencies into the in-memory format.
+      //
+      // I need to add an AssociationColumn to the states table that references the states table. A bit circuitous, but
+      // that's the point!
+      {
+        // The adjacencies data is represented as "state code (string) to state code (string)" pairs. I need to do a
+        // look up of the State object from the state codes.
+        Map<String, State> stateCodeToState = geo.states().stream().collect(Collectors.toMap(State::code, Function.identity()));
+        Association[] associations = new Association[statesTable.size()];
+
+        for (StateData.StateAdjacency stateAdjacency : StateData.STATE_ADJACENCIES) {
+          State state = stateCodeToState.get(stateAdjacency.state());
+          int stateIndex = stateToColumnIndex.get(state);
+          State adjacentState = stateCodeToState.get(stateAdjacency.adjacentState());
+          int adjacentStateIndex = stateToColumnIndex.get(adjacentState);
+
+          Association existingAssociation = associations[stateIndex];
+          Association incrementedAssociation = switch (existingAssociation) {
+            case null -> new Association.One(adjacentStateIndex);
+            case Association a -> a.add(adjacentStateIndex);
+          };
+
+          associations[stateIndex] = incrementedAssociation;
+        }
+
+        ObjectGraph.Column.AssociationColumn stateAdjacenciesColumn = new ObjectGraph.Column.AssociationColumn(statesTable, associations);
+        statesTable.columns().add(stateAdjacenciesColumn);
+      }
 
       {
         // Do a simple scan and determine the ZIP with the highest population.
@@ -192,7 +219,14 @@ public class Runner {
         log.info("The ZIP code with the highest population is {} in {}, {} with a population of {}.", code, city, stateCode, Util.formatInteger(maxPopulation));
       }
 
-      // TODO the rest (and hard part) of the program...
+      {
+        // Query the data using the 'query engine'.
+        //
+        // Specifically, find all ZIP codes that have a population of 10,000 or more and are adjacent to a state with at
+        // least one city named "Springfield".
+
+        // TODO
+      }
     }
   }
 }

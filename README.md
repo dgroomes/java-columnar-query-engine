@@ -64,7 +64,7 @@ Simple requirements. That allows the focus to be on the implementation.
 The code is implemented across a few modules:
 
 * `query-engine`
-  * NOT YET IMPLEMENTED
+  * NOT YET FULLY IMPLEMENTED
   * This module is the actual query engine. It's the most interesting module. 
 * `geography`
   * This module is a pure domain model. It has zero dependencies by design. It models the ZIP, city and
@@ -129,11 +129,14 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Define the adjacencies data.
   * DONE Define the state data (code and name).
   * DONE Incorporate the state data into the Arrow data model.
-  * IN PROGRESS Load the adjacencies data into the in-memory format.
+  * DONE Load the adjacencies data into the in-memory format.
   * Implement a query across state adjacencies data.
-* [ ] Create a generic graph API plus a (overtly simple) query execution engine. The graph API only
+* [ ] IN PROGRESS Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
   supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
   words for this right now).
+  * Ok I did the foundation of this work in other tasks, and the task-tracking is quite messy but I'm not going re-write
+    history here. Let's move on. Now I need flesh out the query API.
+  * Support multiple criteria.
 * [ ] Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
@@ -148,3 +151,4 @@ General clean-ups, TODOs and things I wish to implement for this project:
   to learn the API).
 * [ ] Drop the 'single field' object graph type. I just want to model a "table" or maybe "collection" to use Mongo's term
   which is good because it disambiguates it from SQL.
+* [ ] Separate the query API from the query engine. Use different Gradle modules.

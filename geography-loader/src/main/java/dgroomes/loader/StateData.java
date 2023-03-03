@@ -13,7 +13,7 @@ public class StateData {
 
   public static List<State> STATES;
 
-  record StateAdjacency(String state, String adjacentState) {}
+  public record StateAdjacency(String state, String adjacentState) {}
 
   public static List<StateAdjacency> STATE_ADJACENCIES;
 
