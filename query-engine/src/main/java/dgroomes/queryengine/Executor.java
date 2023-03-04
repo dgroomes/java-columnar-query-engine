@@ -5,10 +5,7 @@ import dgroomes.queryapi.Pointer;
 import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.HashSet;
+import java.util.*;
 import java.util.stream.IntStream;
 
 /**
@@ -36,15 +33,16 @@ public class Executor {
    * I don't care much about generics here. I just want to get something working.
    */
   public static QueryResult match(Query query, Table table) {
-    if (query instanceof Query.OrdinalSingleFieldIntegerQuery query1) {
-      if (table instanceof Table multiColumnEntity) {
-
-        if (multiColumnEntity.columns().size() < query1.ordinal()) {
-          var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(query1.ordinal(), multiColumnEntity.columns().size());
-          return new QueryResult.Failure(msg);
+    Objects.requireNonNull(query, "The 'query' argument must not be null");
+    Objects.requireNonNull(table, "The 'table' argument must not be null");
+    return switch (query) {
+      case Query.OrdinalSingleFieldIntegerQuery query1 -> {
+        if (table.columns().size() < query1.ordinal()) {
+          var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(query1.ordinal(), table.columns().size());
+          yield new QueryResult.Failure(msg);
         }
 
-        Column column1 = multiColumnEntity.columns().get(query1.ordinal());
+        Column column1 = table.columns().get(query1.ordinal());
 
         // Make sure the types match. For example, a query directed at column 3 must match a table with an integer
         // column in the 3rd position.
@@ -53,26 +51,22 @@ public class Executor {
                   .filter(i -> query1.intCriteria().match(intColumn.ints()[i]))
                   .toArray();
 
-          Table pruned = multiColumnEntity.prune(indexMatches);
-          return new QueryResult.Success(pruned);
+          Table pruned = table.prune(indexMatches);
+          yield new QueryResult.Success(pruned);
         } else {
-          return new QueryResult.Failure("The queried column type '%s' is not an integer array but the query is for an integer.".formatted(column1.getClass().getSimpleName()));
+          yield new QueryResult.Failure("The queried column type '%s' is not an integer array but the query is for an integer.".formatted(column1.getClass().getSimpleName()));
         }
-      } else {
-        var msg = "The table type '%s' cannot be queried by query type '%s'".formatted(table.getClass().getSimpleName(), query.getClass().getSimpleName());
-        return new QueryResult.Failure(msg);
       }
-    } else if (query instanceof Query.PointerSingleFieldStringQuery(
-            Pointer pointer, Criteria.StringCriteria stringCriteria
-    )) {
-      // Implement a recursive/iterative search algorithm. Here is some hard work.
-      //
-      // Algorithm working notes. We need to descend the table's fields and its associated tables following the pointer, all the while verifying that
-      // the pointer is "legal" (meaning it follows columns that exist and all the columns are association columns except
-      // for the last one which is a string column). When we reach the end of the pointer, we can apply the string criteria.
-      // But then we have to follow back up the pointer and prune the table.
+      case Query.PointerSingleFieldStringQuery(
+              Pointer pointer, Criteria.StringCriteria stringCriteria
+      ) -> {
+        // Implement a recursive/iterative search algorithm. Here is some hard work.
+        //
+        // Algorithm working notes. We need to descend the table's fields and its associated tables following the pointer, all the while verifying that
+        // the pointer is "legal" (meaning it follows columns that exist and all the columns are association columns except
+        // for the last one which is a string column). When we reach the end of the pointer, we can apply the string criteria.
+        // But then we have to follow back up the pointer and prune the table.
 
-      if (table instanceof Table multiColumnEntity) {
         // I need to group things together during the query execution, like grouping columns with their owning entities.
         // This is some unfortunate glue code. consider refactoring.
         //
@@ -83,7 +77,7 @@ public class Executor {
 
         Deque<DirectionalContextGrouping> groupings = new ArrayDeque<>();
 
-        Table currentEntity = multiColumnEntity;
+        Table currentEntity = table;
         Pointer currentPointer = pointer;
         int[] indexMatches;
         while (true) {
@@ -91,7 +85,7 @@ public class Executor {
             // We've bottomed out. Match the data on the criteria.
             if (currentEntity.columns().size() < ordinal) {
               var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(ordinal, currentEntity.columns().size());
-              return new QueryResult.Failure(msg);
+              yield new QueryResult.Failure(msg);
             }
 
             Column column = currentEntity.columns().get(ordinal);
@@ -101,7 +95,7 @@ public class Executor {
                       .toArray();
               break;
             } else {
-              return new QueryResult.Failure("The queried column type '%s' is not a string array but the query is for a string.".formatted(column.getClass().getSimpleName()));
+              yield new QueryResult.Failure("The queried column type '%s' is not a string array but the query is for a string.".formatted(column.getClass().getSimpleName()));
             }
 
           } else if (currentPointer instanceof Pointer.NestedPointer(int ordinal, Pointer nextPointer)) {
@@ -110,19 +104,14 @@ public class Executor {
             currentPointer = nextPointer;
             currentEntity = associationColumn.associatedEntity;
           } else {
-            return new QueryResult.Failure("I'm not sure what happened.");
+            yield new QueryResult.Failure("I'm not sure what happened.");
           }
         }
 
         int[] EMPTY = new int[0];
 
         // Follow the matched indices back up the graph by tracing the associations.
-        while (true) {
-          if (groupings.isEmpty()) {
-            var pruned = currentEntity.prune(indexMatches);
-            return new QueryResult.Success(pruned);
-          }
-
+        while (!groupings.isEmpty()) {
           DirectionalContextGrouping group = groupings.pop();
           currentEntity = group.entity();
           Column.AssociationColumn associationColumn = group.associationColumn();
@@ -141,126 +130,123 @@ public class Executor {
           }
           indexMatches = nextMatches.stream().mapToInt(i -> i).toArray();
         }
-      } else {
-        var msg = "The table type '%s' cannot be queried by query type '%s'".formatted(table.getClass().getSimpleName(), query.getClass().getSimpleName());
-        return new QueryResult.Failure(msg);
+        var pruned = currentEntity.prune(indexMatches);
+        yield new QueryResult.Success(pruned);
       }
-    } else if (query instanceof Query.PointedStringCriteriaQuery pointedCriteriaQuery) {
-      // Most of this is copy/pasted from the earlier block. I'm going to refactor this eventually because I'm still in
-      // discovery mode.
-      if (table instanceof Table multiColumnEntity) {
-        // Our strategy is to start with the assumption that all entries in the entity match and prune down this list
-        // with each criteria.
-        int[] rootIndexMatches = IntStream.range(0, multiColumnEntity.size()).toArray();
+      case Query.PointedStringCriteriaQuery pointedCriteriaQuery -> {
+        // Most of this is copy/pasted from the earlier block. I'm going to refactor this eventually because I'm still in
+        // discovery mode.
+        if (table instanceof Table multiColumnEntity) {
+          // Our strategy is to start with the assumption that all entries in the entity match and prune down this list
+          // with each criteria.
+          int[] rootIndexMatches = IntStream.range(0, multiColumnEntity.size()).toArray();
 
-        criteriaLoop:
-        for (Query.PointedStringCriteria pointedStringCriteria : pointedCriteriaQuery.pointedCriteriaList()) {
-          var pointer = pointedStringCriteria.pointer();
-          var stringCriteria = pointedStringCriteria.criteria();
+          criteriaLoop:
+          for (Query.PointedStringCriteria pointedStringCriteria : pointedCriteriaQuery.pointedCriteriaList()) {
+            var pointer = pointedStringCriteria.pointer();
+            var stringCriteria = pointedStringCriteria.criteria();
 
-          // I need to group things together during the query execution, like grouping columns with their owning entities.
-          // This is some unfortunate glue code. consider refactoring.
-          //
-          // We group an entity and an associated column together. Because an associated column points to another entity,
-          // we call this a "directional context". Hopefully this helps me understand what I'm doing.
-          record DirectionalContextGrouping(Table entity,
-                                            Column.AssociationColumn associationColumn) {}
+            // I need to group things together during the query execution, like grouping columns with their owning entities.
+            // This is some unfortunate glue code. consider refactoring.
+            //
+            // We group an entity and an associated column together. Because an associated column points to another entity,
+            // we call this a "directional context". Hopefully this helps me understand what I'm doing.
+            record DirectionalContextGrouping(Table entity,
+                                              Column.AssociationColumn associationColumn) {}
 
-          Deque<DirectionalContextGrouping> groupings = new ArrayDeque<>();
+            Deque<DirectionalContextGrouping> groupings = new ArrayDeque<>();
 
-          Table currentEntity = multiColumnEntity;
-          Pointer currentPointer = pointer;
-          int[] indexMatches;
-          while (true) {
-            if (currentPointer instanceof Pointer.Ordinal(int ordinal)) {
-              // We've bottomed out. Match the data on the criteria.
-              if (currentEntity.columns().size() < ordinal) {
-                var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(ordinal, currentEntity.columns().size());
-                return new QueryResult.Failure(msg);
-              }
+            Table currentEntity = multiColumnEntity;
+            Pointer currentPointer = pointer;
+            int[] indexMatches;
+            while (true) {
+              if (currentPointer instanceof Pointer.Ordinal(int ordinal)) {
+                // We've bottomed out. Match the data on the criteria.
+                if (currentEntity.columns().size() < ordinal) {
+                  var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(ordinal, currentEntity.columns().size());
+                  yield new QueryResult.Failure(msg);
+                }
 
-              Column column = currentEntity.columns().get(ordinal);
-              if (column instanceof Column.StringColumn stringColumn) {
-                indexMatches = IntStream.range(0, stringColumn.strings().length)
-                        .filter(i -> stringCriteria.match(stringColumn.strings()[i]))
-                        .toArray();
-                break;
-              } else {
-                return new QueryResult.Failure("The queried column type '%s' is not a string array but the query is for a string.".formatted(column.getClass().getSimpleName()));
-              }
-
-            } else if (currentPointer instanceof Pointer.NestedPointer(int ordinal, Pointer nextPointer)) {
-              var associationColumn = (Column.AssociationColumn) currentEntity.columns().get(ordinal);
-              groupings.add(new DirectionalContextGrouping(currentEntity, associationColumn));
-              currentPointer = nextPointer;
-              currentEntity = associationColumn.associatedEntity;
-            } else {
-              return new QueryResult.Failure("I'm not sure what happened.");
-            }
-          }
-
-          int[] EMPTY = new int[0];
-
-          // Follow the matched indices back up the graph by tracing the associations.
-          while (true) {
-            if (groupings.isEmpty()) {
-              // Prune down the root index matches to the ones that match this pointed criteria search.
-              // We don't use the actual 'prune' method but instead do an intersection of the two integer arrays. Because
-              // the arrays are ordered, we can do a zipper intersection.
-              int[] pruned = new int[indexMatches.length]; // This size is a bit arbitrary. I just made it the max size we I don't have to bother resizing it during the zipper procedure.
-              int prunedIndex = 0;
-              int rootIndexMatchesIndex = 0;
-              int indexMatchesIndex = 0;
-              while (rootIndexMatchesIndex < rootIndexMatches.length && indexMatchesIndex < indexMatches.length) {
-                if (rootIndexMatches[rootIndexMatchesIndex] == indexMatches[indexMatchesIndex]) {
-                  pruned[prunedIndex++] = rootIndexMatches[rootIndexMatchesIndex];
-                  rootIndexMatchesIndex++;
-                  indexMatchesIndex++;
-                } else if (rootIndexMatches[rootIndexMatchesIndex] < indexMatches[indexMatchesIndex]) {
-                  rootIndexMatchesIndex++;
+                Column column = currentEntity.columns().get(ordinal);
+                if (column instanceof Column.StringColumn stringColumn) {
+                  indexMatches = IntStream.range(0, stringColumn.strings().length)
+                          .filter(i -> stringCriteria.match(stringColumn.strings()[i]))
+                          .toArray();
+                  break;
                 } else {
-                  indexMatchesIndex++;
+                  yield new QueryResult.Failure("The queried column type '%s' is not a string array but the query is for a string.".formatted(column.getClass().getSimpleName()));
+                }
+
+              } else if (currentPointer instanceof Pointer.NestedPointer(int ordinal, Pointer nextPointer)) {
+                var associationColumn = (Column.AssociationColumn) currentEntity.columns().get(ordinal);
+                groupings.add(new DirectionalContextGrouping(currentEntity, associationColumn));
+                currentPointer = nextPointer;
+                currentEntity = associationColumn.associatedEntity;
+              } else {
+                yield new QueryResult.Failure("I'm not sure what happened.");
+              }
+            }
+
+            int[] EMPTY = new int[0];
+
+            // Follow the matched indices back up the graph by tracing the associations.
+            while (true) {
+              if (groupings.isEmpty()) {
+                // Prune down the root index matches to the ones that match this pointed criteria search.
+                // We don't use the actual 'prune' method but instead do an intersection of the two integer arrays. Because
+                // the arrays are ordered, we can do a zipper intersection.
+                int[] pruned = new int[indexMatches.length]; // This size is a bit arbitrary. I just made it the max size we I don't have to bother resizing it during the zipper procedure.
+                int prunedIndex = 0;
+                int rootIndexMatchesIndex = 0;
+                int indexMatchesIndex = 0;
+                while (rootIndexMatchesIndex < rootIndexMatches.length && indexMatchesIndex < indexMatches.length) {
+                  if (rootIndexMatches[rootIndexMatchesIndex] == indexMatches[indexMatchesIndex]) {
+                    pruned[prunedIndex++] = rootIndexMatches[rootIndexMatchesIndex];
+                    rootIndexMatchesIndex++;
+                    indexMatchesIndex++;
+                  } else if (rootIndexMatches[rootIndexMatchesIndex] < indexMatches[indexMatchesIndex]) {
+                    rootIndexMatchesIndex++;
+                  } else {
+                    indexMatchesIndex++;
+                  }
+                }
+
+                rootIndexMatches = Arrays.copyOf(pruned, prunedIndex);
+                // Yes I'm using a 'continue'! Probably a very unpopular choice but during the exploratory work, it's
+                // convenient to write top-down code and so we don't have the luxury of the return statement because that
+                // would return from the entire method.
+                continue criteriaLoop;
+              }
+
+              DirectionalContextGrouping group = groupings.pop();
+              // Is this a problem that it's never used? Do I need 'currentEntity'?
+              //            currentEntity = group.entity();
+              Column.AssociationColumn associationColumn = group.associationColumn();
+              Association[] reverseAssociations = associationColumn.reverseAssociatedColumn().associations;
+              var nextMatches = new HashSet<Integer>();
+              for (int i : indexMatches) {
+                Association reverseAssociation = reverseAssociations[i];
+                var toAdd = switch (reverseAssociation) {
+                  case Association.Many(var indices) -> indices;
+                  case Association.One(var index) -> new int[]{index};
+                  case Association.None ignored -> EMPTY;
+                };
+                for (int toAddI : toAdd) {
+                  nextMatches.add(toAddI);
                 }
               }
-
-              rootIndexMatches = Arrays.copyOf(pruned, prunedIndex);
-              // Yes I'm using a 'continue'! Probably a very unpopular choice but during the exploratory work, it's
-              // convenient to write top-down code and so we don't have the luxury of the return statement because that
-              // would return from the entire method.
-              continue criteriaLoop;
+              indexMatches = nextMatches.stream().mapToInt(i -> i).toArray();
             }
-
-            DirectionalContextGrouping group = groupings.pop();
-            // Is this a problem that it's never used? Do I need 'currentEntity'?
-            //            currentEntity = group.entity();
-            Column.AssociationColumn associationColumn = group.associationColumn();
-            Association[] reverseAssociations = associationColumn.reverseAssociatedColumn().associations;
-            var nextMatches = new HashSet<Integer>();
-            for (int i : indexMatches) {
-              Association reverseAssociation = reverseAssociations[i];
-              var toAdd = switch (reverseAssociation) {
-                case Association.Many(var indices) -> indices;
-                case Association.One(var index) -> new int[]{index};
-                case Association.None ignored -> EMPTY;
-              };
-              for (int toAddI : toAdd) {
-                nextMatches.add(toAddI);
-              }
-            }
-            indexMatches = nextMatches.stream().mapToInt(i -> i).toArray();
           }
-        }
 
-        var pruned = multiColumnEntity.prune(rootIndexMatches);
-        return new QueryResult.Success(pruned);
-      } else {
-        var msg = "The table type '%s' cannot be queried by query type '%s'".formatted(table.getClass().getSimpleName(), query.getClass().getSimpleName());
-        return new QueryResult.Failure(msg);
+          var pruned = multiColumnEntity.prune(rootIndexMatches);
+          yield new QueryResult.Success(pruned);
+        } else {
+          var msg = "The table type '%s' cannot be queried by query type '%s'".formatted(table.getClass().getSimpleName(), query.getClass().getSimpleName());
+          yield new QueryResult.Failure(msg);
+        }
       }
-    } else {
-      var msg = "This query type is not yet implemented: %s".formatted(query.getClass().getSimpleName());
-      return new QueryResult.Failure(msg);
-    }
+    };
   }
 
   public sealed interface QueryResult permits QueryResult.Success, QueryResult.Failure {

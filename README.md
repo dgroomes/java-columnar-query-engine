@@ -131,7 +131,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Incorporate the state data into the Arrow data model.
   * DONE Load the adjacencies data into the in-memory format.
   * Implement a query across state adjacencies data.
-* [ ] IN PROGRESS Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
+* [ ] Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
   supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
   words for this right now).
   * Ok I did the foundation of this work in other tasks, and the task-tracking is quite messy but I'm not going re-write
@@ -164,3 +164,4 @@ General clean-ups, TODOs and things I wish to implement for this project:
   type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
 * [ ] Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
   allows multiple criteria of multiple types (e.g. string and int).
+* [ ] IN PROGRESS Consolidate the duplicative code in `Executor`.
