@@ -76,8 +76,10 @@ public class Executor {
         var msg = "The object graph type '%s' cannot be queried by query type '%s'".formatted(objectGraph.getClass().getSimpleName(), query.getClass().getSimpleName());
         return new QueryResult.Failure(msg);
       }
-    } else if (query instanceof Query.PointerSingleFieldStringQuery(Query.Pointer pointer, Query.StringCriteria stringCriteria)) {
-      // todo implement a recursive/iterative search algorithm. Here is some hard work.
+    } else if (query instanceof Query.PointerSingleFieldStringQuery(
+            Query.Pointer pointer, Query.StringCriteria stringCriteria
+    )) {
+      // Implement a recursive/iterative search algorithm. Here is some hard work.
       //
       // Algorithm working notes. We need to descend the object graph following the pointer, all the while verifying that
       // the pointer is "legal" (meaning it follows columns that exist and all the columns are association columns except
@@ -90,7 +92,8 @@ public class Executor {
         //
         // We group an entity and an associated column together. Because an associated column points to another entity,
         // we call this a "directional context". Hopefully this helps me understand what I'm doing.
-        record DirectionalContextGrouping(ObjectGraph.MultiColumnEntity entity, ObjectGraph.Column.AssociationColumn associationColumn) {}
+        record DirectionalContextGrouping(ObjectGraph.MultiColumnEntity entity,
+                                          ObjectGraph.Column.AssociationColumn associationColumn) {}
 
         Deque<DirectionalContextGrouping> groupings = new ArrayDeque<>();
 
@@ -152,6 +155,118 @@ public class Executor {
           }
           indexMatches = nextMatches.stream().mapToInt(i -> i).toArray();
         }
+      } else {
+        var msg = "The object graph type '%s' cannot be queried by query type '%s'".formatted(objectGraph.getClass().getSimpleName(), query.getClass().getSimpleName());
+        return new QueryResult.Failure(msg);
+      }
+    } else if (query instanceof Query.PointedStringCriteriaQuery pointedCriteriaQuery) {
+      // Most of this is copy/pasted from the earlier block. I'm going to refactor this eventually because I'm still in
+      // discovery mode.
+      if (objectGraph instanceof ObjectGraph.MultiColumnEntity multiColumnEntity) {
+        // Our strategy is to start with the assumption that all entries in the entity match and prune down this list
+        // with each criteria.
+        int[] rootIndexMatches = IntStream.range(0, multiColumnEntity.size()).toArray();
+
+        criteriaLoop:
+        for (Query.PointedStringCriteria pointedStringCriteria : pointedCriteriaQuery.pointedCriteriaList()) {
+          var pointer = pointedStringCriteria.pointer();
+          var stringCriteria = pointedStringCriteria.criteria();
+
+          // I need to group things together during the query execution, like grouping columns with their owning entities.
+          // This is some unfortunate glue code. consider refactoring.
+          //
+          // We group an entity and an associated column together. Because an associated column points to another entity,
+          // we call this a "directional context". Hopefully this helps me understand what I'm doing.
+          record DirectionalContextGrouping(ObjectGraph.MultiColumnEntity entity,
+                                            ObjectGraph.Column.AssociationColumn associationColumn) {}
+
+          Deque<DirectionalContextGrouping> groupings = new ArrayDeque<>();
+
+          ObjectGraph.MultiColumnEntity currentEntity = multiColumnEntity;
+          Query.Pointer currentPointer = pointer;
+          int[] indexMatches;
+          while (true) {
+            if (currentPointer instanceof Query.Pointer.Ordinal(int ordinal)) {
+              // We've bottomed out. Match the data on the criteria.
+              if (currentEntity.columns().size() < ordinal) {
+                var msg = "The query ordinal '%d' is out of bounds for the object graph with %d columns".formatted(ordinal, currentEntity.columns().size());
+                return new QueryResult.Failure(msg);
+              }
+
+              ObjectGraph.Column column = currentEntity.columns().get(ordinal);
+              if (column instanceof ObjectGraph.Column.StringColumn stringColumn) {
+                indexMatches = IntStream.range(0, stringColumn.strings().length)
+                        .filter(i -> stringCriteria.match(stringColumn.strings()[i]))
+                        .toArray();
+                break;
+              } else {
+                return new QueryResult.Failure("The queried column type '%s' is not a string array but the query is for a string.".formatted(column.getClass().getSimpleName()));
+              }
+
+            } else if (currentPointer instanceof Query.Pointer.NestedPointer(int ordinal, Query.Pointer nextPointer)) {
+              var associationColumn = (ObjectGraph.Column.AssociationColumn) currentEntity.columns().get(ordinal);
+              groupings.add(new DirectionalContextGrouping(currentEntity, associationColumn));
+              currentPointer = nextPointer;
+              currentEntity = associationColumn.associatedEntity;
+            } else {
+              return new QueryResult.Failure("I'm not sure what happened.");
+            }
+          }
+
+          int[] EMPTY = new int[0];
+
+          // Follow the matched indices back up the graph by tracing the associations.
+          while (true) {
+            if (groupings.isEmpty()) {
+              // Prune down the root index matches to the ones that match this pointed criteria search.
+              // We don't use the actual 'prune' method but instead do an intersection of the two integer arrays. Because
+              // the arrays are ordered, we can do a zipper intersection.
+              int[] pruned = new int[indexMatches.length]; // This size is a bit arbitrary. I just made it the max size we I don't have to bother resizing it during the zipper procedure.
+              int prunedIndex = 0;
+              int rootIndexMatchesIndex = 0;
+              int indexMatchesIndex = 0;
+              while (rootIndexMatchesIndex < rootIndexMatches.length && indexMatchesIndex < indexMatches.length) {
+                if (rootIndexMatches[rootIndexMatchesIndex] == indexMatches[indexMatchesIndex]) {
+                  pruned[prunedIndex++] = rootIndexMatches[rootIndexMatchesIndex];
+                  rootIndexMatchesIndex++;
+                  indexMatchesIndex++;
+                } else if (rootIndexMatches[rootIndexMatchesIndex] < indexMatches[indexMatchesIndex]) {
+                  rootIndexMatchesIndex++;
+                } else {
+                  indexMatchesIndex++;
+                }
+              }
+
+              rootIndexMatches = Arrays.copyOf(pruned, prunedIndex);
+              // Yes I'm using a 'continue'! Probably a very unpopular choice but during the exploratory work, it's
+              // convenient to write top-down code and so we don't have the luxury of the return statement because that
+              // would return from the entire method.
+              continue criteriaLoop;
+            }
+
+            DirectionalContextGrouping group = groupings.pop();
+            // Is this a problem that it's never used? Do I need 'currentEntity'?
+            //            currentEntity = group.entity();
+            ObjectGraph.Column.AssociationColumn associationColumn = group.associationColumn();
+            ObjectGraph.Association[] reverseAssociations = associationColumn.reverseAssociatedColumn().associations;
+            var nextMatches = new HashSet<Integer>();
+            for (int i : indexMatches) {
+              ObjectGraph.Association reverseAssociation = reverseAssociations[i];
+              var toAdd = switch (reverseAssociation) {
+                case ObjectGraph.Association.Many(var indices) -> indices;
+                case ObjectGraph.Association.One(var index) -> new int[]{index};
+                case ObjectGraph.Association.None ignored -> EMPTY;
+              };
+              for (int toAddI : toAdd) {
+                nextMatches.add(toAddI);
+              }
+            }
+            indexMatches = nextMatches.stream().mapToInt(i -> i).toArray();
+          }
+        }
+
+        var pruned = multiColumnEntity.prune(rootIndexMatches);
+        return new QueryResult.Success(pruned);
       } else {
         var msg = "The object graph type '%s' cannot be queried by query type '%s'".formatted(objectGraph.getClass().getSimpleName(), query.getClass().getSimpleName());
         return new QueryResult.Failure(msg);

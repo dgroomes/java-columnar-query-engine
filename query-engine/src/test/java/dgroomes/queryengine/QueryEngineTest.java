@@ -4,8 +4,9 @@ import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Success;
 import dgroomes.queryengine.ObjectGraph.Column.IntegerColumn;
 import dgroomes.queryengine.Query.SingleFieldIntegerQuery;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static dgroomes.queryengine.ObjectGraph.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,6 +101,38 @@ public class QueryEngineTest {
     assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
     var cityMatches = (Column.StringColumn) cityColumn;
     assertThat(cityMatches.strings()).containsExactly("Rochester");
+  }
+
+  /**
+   * [Happy Path]
+   * Multi-criteria query.
+   */
+  @Test
+  void multiCriteria() {
+    // Arrange
+    //
+    // We're going to search over a simple collection of strings to find those that are greater than "a" but less than
+    // "d". This test case is interesting because we're exercising two criteria in a single query.
+    MultiColumnEntity corpus = ofColumns(ofStrings("a", "a", "b", "c", "c", "d"));
+
+    var query = new Query.PointedStringCriteriaQuery(List.of(
+            new Query.PointedStringCriteria(new Query.Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
+            new Query.PointedStringCriteria(new Query.Pointer.Ordinal(0), s -> s.compareTo("d") < 0)));
+
+    // Act
+    QueryResult result = Executor.match(query, corpus);
+
+    // Assert
+    assertThat(result).isInstanceOf(Success.class);
+    Success success = (Success) result;
+    Object matches = success.matches();
+    assertThat(matches).isInstanceOf(MultiColumnEntity.class);
+    MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
+    assertThat(multiColumnEntityMatches.columns()).hasSize(1);
+    ObjectGraph.Column firstColumn = multiColumnEntityMatches.columns().get(0);
+    assertThat(firstColumn).isInstanceOf(Column.StringColumn.class);
+    var stringMatches = (Column.StringColumn) firstColumn;
+    assertThat(stringMatches.strings()).containsExactly("b", "c", "c");
   }
 
   /**

@@ -136,7 +136,12 @@ General clean-ups, TODOs and things I wish to implement for this project:
   words for this right now).
   * Ok I did the foundation of this work in other tasks, and the task-tracking is quite messy but I'm not going re-write
     history here. Let's move on. Now I need flesh out the query API.
-  * Support multiple criteria.
+  * DONE Support multiple criteria for strings.
+  * Support multiple criteria for ints. Note: if I take on this work now, I will implement it as another copy/paste
+    change and the code will continue to suffer. If I consolidate the design and implementation first, while benefitting
+    from a solid set of regression tests against an API that I'm also happy enough with (no need to change the API for now!)
+    then the refactoring process will be safe/fun and then I come back and implement this task. I need to pay off this
+    tech debt (it was a good debt).
 * [ ] Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.

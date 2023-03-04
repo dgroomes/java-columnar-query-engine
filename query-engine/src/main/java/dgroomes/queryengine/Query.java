@@ -1,5 +1,7 @@
 package dgroomes.queryengine;
 
+import java.util.List;
+
 /**
  * WIP.
  * <p>
@@ -11,11 +13,13 @@ package dgroomes.queryengine;
  */
 public sealed interface Query {
 
-  interface IntCriteria {
+  sealed interface Criteria permits IntCriteria, StringCriteria {}
+
+  non-sealed interface IntCriteria extends Criteria {
     boolean match(int integerUnderTest);
   }
 
-  interface StringCriteria {
+  non-sealed interface StringCriteria extends Criteria {
     boolean match(String stringUnderTest);
   }
 
@@ -25,9 +29,12 @@ public sealed interface Query {
   record OrdinalSingleFieldIntegerQuery(int ordinal, IntCriteria intCriteria) implements Query {
   }
 
-  // note: most of these interfaces/records are temporary. more comprehensive designs will surface.
+  // Note: most of these interfaces/records are temporary. more comprehensive designs will surface.
   // This is a single-field query directed by a "pointer" to the field-under-test.
   record PointerSingleFieldStringQuery(Pointer pointer, StringCriteria stringCriteria) implements Query {}
+
+  record PointedStringCriteriaQuery(List<PointedStringCriteria> pointedCriteriaList) implements Query {}
+  record PointedStringCriteria(Pointer pointer, StringCriteria criteria) {}
 
   sealed interface Pointer {
     record Ordinal(int ordinal) implements Pointer {}
