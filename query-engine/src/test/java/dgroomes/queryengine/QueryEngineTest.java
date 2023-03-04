@@ -1,5 +1,6 @@
 package dgroomes.queryengine;
 
+import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Success;

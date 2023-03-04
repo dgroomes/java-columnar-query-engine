@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(project(":util"))
+    api(project(":query-api"))
 
     testImplementation(libs.assertj)
     testImplementation(libs.junit.jupiter.api)
