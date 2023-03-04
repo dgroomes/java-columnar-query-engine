@@ -1,5 +1,7 @@
 package dgroomes.queryengine;
 
+import dgroomes.queryapi.Criteria;
+import dgroomes.queryapi.Pointer;
 import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
 
@@ -61,7 +63,7 @@ public class Executor {
         return new QueryResult.Failure(msg);
       }
     } else if (query instanceof Query.PointerSingleFieldStringQuery(
-            Query.Pointer pointer, Query.StringCriteria stringCriteria
+            Pointer pointer, Criteria.StringCriteria stringCriteria
     )) {
       // Implement a recursive/iterative search algorithm. Here is some hard work.
       //
@@ -82,10 +84,10 @@ public class Executor {
         Deque<DirectionalContextGrouping> groupings = new ArrayDeque<>();
 
         Table currentEntity = multiColumnEntity;
-        Query.Pointer currentPointer = pointer;
+        Pointer currentPointer = pointer;
         int[] indexMatches;
         while (true) {
-          if (currentPointer instanceof Query.Pointer.Ordinal(int ordinal)) {
+          if (currentPointer instanceof Pointer.Ordinal(int ordinal)) {
             // We've bottomed out. Match the data on the criteria.
             if (currentEntity.columns().size() < ordinal) {
               var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(ordinal, currentEntity.columns().size());
@@ -102,7 +104,7 @@ public class Executor {
               return new QueryResult.Failure("The queried column type '%s' is not a string array but the query is for a string.".formatted(column.getClass().getSimpleName()));
             }
 
-          } else if (currentPointer instanceof Query.Pointer.NestedPointer(int ordinal, Query.Pointer nextPointer)) {
+          } else if (currentPointer instanceof Pointer.NestedPointer(int ordinal, Pointer nextPointer)) {
             var associationColumn = (Column.AssociationColumn) currentEntity.columns().get(ordinal);
             groupings.add(new DirectionalContextGrouping(currentEntity, associationColumn));
             currentPointer = nextPointer;
@@ -167,10 +169,10 @@ public class Executor {
           Deque<DirectionalContextGrouping> groupings = new ArrayDeque<>();
 
           Table currentEntity = multiColumnEntity;
-          Query.Pointer currentPointer = pointer;
+          Pointer currentPointer = pointer;
           int[] indexMatches;
           while (true) {
-            if (currentPointer instanceof Query.Pointer.Ordinal(int ordinal)) {
+            if (currentPointer instanceof Pointer.Ordinal(int ordinal)) {
               // We've bottomed out. Match the data on the criteria.
               if (currentEntity.columns().size() < ordinal) {
                 var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(ordinal, currentEntity.columns().size());
@@ -187,7 +189,7 @@ public class Executor {
                 return new QueryResult.Failure("The queried column type '%s' is not a string array but the query is for a string.".formatted(column.getClass().getSimpleName()));
               }
 
-            } else if (currentPointer instanceof Query.Pointer.NestedPointer(int ordinal, Query.Pointer nextPointer)) {
+            } else if (currentPointer instanceof Pointer.NestedPointer(int ordinal, Pointer nextPointer)) {
               var associationColumn = (Column.AssociationColumn) currentEntity.columns().get(ordinal);
               groupings.add(new DirectionalContextGrouping(currentEntity, associationColumn));
               currentPointer = nextPointer;

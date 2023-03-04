@@ -159,6 +159,8 @@ General clean-ups, TODOs and things I wish to implement for this project:
   classes because it is distracting being so tightly coupled/related (especially with the static creator methods).
   which is good because it disambiguates it from SQL.
 * [x] DONE (answer: yes) Can we make the query execution signature return a table?
-* [ ] IN PROGRESS Separate the query API from the query engine. Use different Gradle modules.
+* [x] DONE Separate the query API from the query engine. Use different Gradle modules.
 * [ ] Generic type parameters should work on the 'match' method. It takes a table and returns table of the exact same
   type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
+* [ ] Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
+  allows multiple criteria of multiple types (e.g. string and int).

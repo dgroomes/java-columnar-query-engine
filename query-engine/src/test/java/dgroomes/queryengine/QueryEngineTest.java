@@ -1,5 +1,6 @@
 package dgroomes.queryengine;
 
+import dgroomes.queryapi.Pointer;
 import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
@@ -83,8 +84,8 @@ public class QueryEngineTest {
     Table corpus = Table.ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
 
     var query = new Query.PointedStringCriteriaQuery(List.of(
-            new Query.PointedStringCriteria(new Query.Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
-            new Query.PointedStringCriteria(new Query.Pointer.Ordinal(0), s -> s.compareTo("d") < 0)));
+            new Query.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
+            new Query.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("d") < 0)));
 
     // Act
     QueryResult result = Executor.match(query, corpus);
@@ -121,7 +122,7 @@ public class QueryEngineTest {
 
     // Query for South Dakota cities
     {
-      var query = new Query.PointerSingleFieldStringQuery(new Query.Pointer.NestedPointer(1, new Query.Pointer.Ordinal(0)), "South Dakota"::equals);
+      var query = new Query.PointerSingleFieldStringQuery(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "South Dakota"::equals);
 
       // Act
       QueryResult result = Executor.match(query, cities);
@@ -139,7 +140,7 @@ public class QueryEngineTest {
 
     // Query for Minnesota cities
     {
-      var query = new Query.PointerSingleFieldStringQuery(new Query.Pointer.NestedPointer(1, new Query.Pointer.Ordinal(0)), "Minnesota"::equals);
+      var query = new Query.PointerSingleFieldStringQuery(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "Minnesota"::equals);
 
       // Act
       QueryResult result = Executor.match(query, cities);
