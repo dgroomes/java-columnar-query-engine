@@ -6,8 +6,9 @@ import dgroomes.geography.State;
 import dgroomes.geography.Zip;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
-import dgroomes.queryengine.ObjectGraph;
-import dgroomes.queryengine.ObjectGraph.Association;
+import dgroomes.queryengine.Column;
+import dgroomes.queryengine.Association;
+import dgroomes.queryengine.Table;
 import dgroomes.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,20 +45,20 @@ public class Runner {
     }
 
     // Load the ZIP data into the in-memory table/column format.
-    ObjectGraph.MultiColumnEntity zipsTable;
-    ObjectGraph.Column.IntegerColumn zipCodeColumn;
-    ObjectGraph.Column.IntegerColumn zipPopulationColumn;
-    ObjectGraph.Column.AssociationColumn zipCityColumn;
+    Table zipsTable;
+    Column.IntegerColumn zipCodeColumn;
+    Column.IntegerColumn zipPopulationColumn;
+    Column.AssociationColumn zipCityColumn;
 
-    ObjectGraph.MultiColumnEntity citiesTable;
-    ObjectGraph.Column.StringColumn cityNameColumn;
-    ObjectGraph.Column.AssociationColumn cityZipColumn;
-    ObjectGraph.Column.AssociationColumn cityStateColumn;
+    Table citiesTable;
+    Column.StringColumn cityNameColumn;
+    Column.AssociationColumn cityZipColumn;
+    Column.AssociationColumn cityStateColumn;
 
-    ObjectGraph.MultiColumnEntity statesTable;
-    ObjectGraph.Column.StringColumn stateCodeColumn;
-    ObjectGraph.Column.StringColumn stateNameColumn;
-    ObjectGraph.Column.AssociationColumn stateCityColumn;
+    Table statesTable;
+    Column.StringColumn stateCodeColumn;
+    Column.StringColumn stateNameColumn;
+    Column.AssociationColumn stateCityColumn;
 
     {
       // Load the state data into the in-memory format
@@ -81,9 +82,9 @@ public class Runner {
           i++;
         }
 
-        stateCodeColumn = new ObjectGraph.Column.StringColumn(stateCodes);
-        stateNameColumn = new ObjectGraph.Column.StringColumn(stateNames);
-        statesTable = ObjectGraph.ofColumns(stateCodeColumn, stateNameColumn);
+        stateCodeColumn = new Column.StringColumn(stateCodes);
+        stateNameColumn = new Column.StringColumn(stateNames);
+        statesTable = Table.ofColumns(stateCodeColumn, stateNameColumn);
       }
 
       // Load the city data into the in-memory format.
@@ -122,9 +123,9 @@ public class Runner {
           i++;
         }
 
-        cityNameColumn = new ObjectGraph.Column.StringColumn(cityNames);
-        cityStateColumn = new ObjectGraph.Column.AssociationColumn(statesTable, cityStateAssociations);
-        citiesTable = ObjectGraph.ofColumns(cityNameColumn, cityStateColumn);
+        cityNameColumn = new Column.StringColumn(cityNames);
+        cityStateColumn = new Column.AssociationColumn(statesTable, cityStateAssociations);
+        citiesTable = Table.ofColumns(cityNameColumn, cityStateColumn);
       }
 
 
@@ -158,11 +159,11 @@ public class Runner {
           i++;
         }
 
-        zipCodeColumn = new ObjectGraph.Column.IntegerColumn(codes);
-        zipPopulationColumn = new ObjectGraph.Column.IntegerColumn(populations);
-        zipCityColumn = new ObjectGraph.Column.AssociationColumn(citiesTable, zipCityAssociations);
-        zipsTable = ObjectGraph.ofColumns(zipCodeColumn, zipPopulationColumn, zipCityColumn);
-        citiesTable.columns().add(new ObjectGraph.Column.AssociationColumn(zipsTable, cityZipAssociations));
+        zipCodeColumn = new Column.IntegerColumn(codes);
+        zipPopulationColumn = new Column.IntegerColumn(populations);
+        zipCityColumn = new Column.AssociationColumn(citiesTable, zipCityAssociations);
+        zipsTable = Table.ofColumns(zipCodeColumn, zipPopulationColumn, zipCityColumn);
+        citiesTable.columns().add(new Column.AssociationColumn(zipsTable, cityZipAssociations));
       }
 
       // Load the state adjacencies into the in-memory format.
@@ -190,7 +191,7 @@ public class Runner {
           associations[stateIndex] = incrementedAssociation;
         }
 
-        ObjectGraph.Column.AssociationColumn stateAdjacenciesColumn = new ObjectGraph.Column.AssociationColumn(statesTable, associations);
+        Column.AssociationColumn stateAdjacenciesColumn = new Column.AssociationColumn(statesTable, associations);
         statesTable.columns().add(stateAdjacenciesColumn);
       }
 

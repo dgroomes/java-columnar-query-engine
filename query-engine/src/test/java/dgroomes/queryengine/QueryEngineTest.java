@@ -2,12 +2,11 @@ package dgroomes.queryengine;
 
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Success;
-import dgroomes.queryengine.ObjectGraph.Column.IntegerColumn;
+import dgroomes.queryengine.Column.IntegerColumn;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static dgroomes.queryengine.ObjectGraph.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
@@ -24,8 +23,8 @@ public class QueryEngineTest {
    * Ordinal integer query over a multi-field (i.e. column) type that contains one column.
    */
   @Test
-  void intQuery_multiFieldType_oneColumn() {
-    MultiColumnEntity corpus = ofColumns(ofInts(-1, 0, 1, 2, 3));
+  void intQuery_oneColumnTable() {
+    Table corpus = Table.ofColumns(Column.ofInts(-1, 0, 1, 2, 3));
     var query = new Query.OrdinalSingleFieldIntegerQuery(0, i -> i > 0);
 
     // Act
@@ -35,10 +34,10 @@ public class QueryEngineTest {
     assertThat(result).isInstanceOf(Success.class);
     Success success = (Success) result;
     Object matches = success.matches();
-    assertThat(matches).isInstanceOf(MultiColumnEntity.class);
-    MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
+    assertThat(matches).isInstanceOf(Table.class);
+    Table multiColumnEntityMatches = (Table) matches;
     assertThat(multiColumnEntityMatches.columns()).hasSize(1);
-    ObjectGraph.Column firstColumn = multiColumnEntityMatches.columns().get(0);
+    Column firstColumn = multiColumnEntityMatches.columns().get(0);
     assertThat(firstColumn).isInstanceOf(IntegerColumn.class);
     var intMatches = (IntegerColumn) firstColumn;
     assertThat(intMatches.ints()).containsExactly(1, 2, 3);
@@ -49,13 +48,13 @@ public class QueryEngineTest {
    * Ordinal integer query over a multi-field (i.e. column) type that contains two columns.
    */
   @Test
-  void intQuery_multiFieldType_twoColumns() {
-    MultiColumnEntity corpus = ofColumns(
+  void intQuery_twoColumnTable() {
+    Table corpus = Table.ofColumns(
             // City names
-            ofStrings("Minneapolis", "Rochester", "Duluth"),
+            Column.ofStrings("Minneapolis", "Rochester", "Duluth"),
 
             // City populations
-            ofInts(425_336, 121_395, 86_697));
+            Column.ofInts(425_336, 121_395, 86_697));
     var query = new Query.OrdinalSingleFieldIntegerQuery(1, pop -> pop > 100_000 && pop < 150_000);
 
     // Act
@@ -65,10 +64,10 @@ public class QueryEngineTest {
     assertThat(result).isInstanceOf(Success.class);
     Success success = (Success) result;
     Object matches = success.matches();
-    assertThat(matches).isInstanceOf(MultiColumnEntity.class);
-    MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
+    assertThat(matches).isInstanceOf(Table.class);
+    Table multiColumnEntityMatches = (Table) matches;
     assertThat(multiColumnEntityMatches.columns()).hasSize(2);
-    ObjectGraph.Column cityColumn = multiColumnEntityMatches.columns().get(0);
+    Column cityColumn = multiColumnEntityMatches.columns().get(0);
     assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
     var cityMatches = (Column.StringColumn) cityColumn;
     assertThat(cityMatches.strings()).containsExactly("Rochester");
@@ -84,7 +83,7 @@ public class QueryEngineTest {
     //
     // We're going to search over a simple collection of strings to find those that are greater than "a" but less than
     // "d". This test case is interesting because we're exercising two criteria in a single query.
-    MultiColumnEntity corpus = ofColumns(ofStrings("a", "a", "b", "c", "c", "d"));
+    Table corpus = Table.ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
 
     var query = new Query.PointedStringCriteriaQuery(List.of(
             new Query.PointedStringCriteria(new Query.Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
@@ -97,10 +96,10 @@ public class QueryEngineTest {
     assertThat(result).isInstanceOf(Success.class);
     Success success = (Success) result;
     Object matches = success.matches();
-    assertThat(matches).isInstanceOf(MultiColumnEntity.class);
-    MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
+    assertThat(matches).isInstanceOf(Table.class);
+    Table multiColumnEntityMatches = (Table) matches;
     assertThat(multiColumnEntityMatches.columns()).hasSize(1);
-    ObjectGraph.Column firstColumn = multiColumnEntityMatches.columns().get(0);
+    Column firstColumn = multiColumnEntityMatches.columns().get(0);
     assertThat(firstColumn).isInstanceOf(Column.StringColumn.class);
     var stringMatches = (Column.StringColumn) firstColumn;
     assertThat(stringMatches.strings()).containsExactly("b", "c", "c");
@@ -114,14 +113,14 @@ public class QueryEngineTest {
    */
   @Test
   void queryOnAssociationProperty() {
-    MultiColumnEntity cities = ofColumns(ofStrings("Minneapolis", "Pierre", "Duluth"));
-    MultiColumnEntity states = ofColumns(ofStrings("Minnesota", "South Dakota"));
+    Table cities = Table.ofColumns(Column.ofStrings("Minneapolis", "Pierre", "Duluth"));
+    Table states = Table.ofColumns(Column.ofStrings("Minnesota", "South Dakota"));
     // The "contained in" association from city to state. It is based on the index position of the cities and states
     // expressed above.
     cities.associateTo(states,
-            toOne(0) /* Minneapolis is contained in Minnesota */,
-            toOne(1) /* Pierre is contained in South Dakota */,
-            toOne(0) /* Duluth is contained in Minnesota */);
+            Association.toOne(0) /* Minneapolis is contained in Minnesota */,
+            Association.toOne(1) /* Pierre is contained in South Dakota */,
+            Association.toOne(0) /* Duluth is contained in Minnesota */);
     // Note: '1' is the ordinal position of the "contained in" association column to the state collection.
     // '0' is the ordinal position of the state name column in the state collection.
 
@@ -136,10 +135,10 @@ public class QueryEngineTest {
       assertThat(result).isInstanceOf(Success.class);
       Success success = (Success) result;
       Object matches = success.matches();
-      assertThat(matches).isInstanceOf(MultiColumnEntity.class);
-      MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
+      assertThat(matches).isInstanceOf(Table.class);
+      Table multiColumnEntityMatches = (Table) matches;
       assertThat(multiColumnEntityMatches.columns()).hasSize(2);
-      ObjectGraph.Column cityColumn = multiColumnEntityMatches.columns().get(0);
+      Column cityColumn = multiColumnEntityMatches.columns().get(0);
       assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
       var cityMatches = (Column.StringColumn) cityColumn;
       assertThat(cityMatches.strings()).containsExactly("Pierre");
@@ -156,10 +155,10 @@ public class QueryEngineTest {
       assertThat(result).isInstanceOf(Success.class);
       Success success = (Success) result;
       Object matches = success.matches();
-      assertThat(matches).isInstanceOf(MultiColumnEntity.class);
-      MultiColumnEntity multiColumnEntityMatches = (MultiColumnEntity) matches;
+      assertThat(matches).isInstanceOf(Table.class);
+      Table multiColumnEntityMatches = (Table) matches;
       assertThat(multiColumnEntityMatches.columns()).hasSize(2);
-      ObjectGraph.Column cityColumn = multiColumnEntityMatches.columns().get(0);
+      Column cityColumn = multiColumnEntityMatches.columns().get(0);
       assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
       var cityMatches = (Column.StringColumn) cityColumn;
       assertThat(cityMatches.strings()).containsExactly("Minneapolis", "Duluth");
