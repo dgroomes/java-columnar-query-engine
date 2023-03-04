@@ -40,17 +40,7 @@ public class Executor {
    * I don't care much about generics here. I just want to get something working.
    */
   public static QueryResult match(Query query, ObjectGraph objectGraph) {
-    if (query instanceof Query.SingleFieldIntegerQuery query1) {
-      if (objectGraph instanceof IntegerColumn boxed) {
-        int[] matches = Arrays.stream(boxed.ints())
-                .filter(query1::match)
-                .toArray();
-        return new QueryResult.Success(matches);
-      }
-
-      var msg = "The object graph type '%s' cannot be queried by query type '%s'".formatted(objectGraph.getClass().getSimpleName(), query.getClass().getSimpleName());
-      return new QueryResult.Failure(msg);
-    } else if (query instanceof Query.OrdinalSingleFieldIntegerQuery query1) {
+    if (query instanceof Query.OrdinalSingleFieldIntegerQuery query1) {
       if (objectGraph instanceof ObjectGraph.MultiColumnEntity multiColumnEntity) {
 
         if (multiColumnEntity.columns().size() < query1.ordinal()) {

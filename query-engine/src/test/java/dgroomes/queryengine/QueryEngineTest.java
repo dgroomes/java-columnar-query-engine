@@ -3,7 +3,6 @@ package dgroomes.queryengine;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Success;
 import dgroomes.queryengine.ObjectGraph.Column.IntegerColumn;
-import dgroomes.queryengine.Query.SingleFieldIntegerQuery;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,34 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * consider if that's overkill.
  */
 public class QueryEngineTest {
-
-  /**
-   * [Happy Path]
-   * Single-field integer query over a direct array.
-   * <p>
-   */
-  @Test
-  void intQuery_intArray() {
-    // Arrange
-    //
-    // Let's write a simple query over simple data.
-    //
-    // Data-under-test. This type is like a single-column table.
-    IntegerColumn corpus = ofInts(-1, 0, 1, 2, 3);
-    // Let's search for positive (non-zero) numbers.
-    SingleFieldIntegerQuery query = integerUnderTest -> integerUnderTest > 0;
-
-    // Act
-    QueryResult result = Executor.match(query, corpus);
-
-    // Assert
-    assertThat(result).isInstanceOf(Success.class);
-    Success success = (Success) result;
-    Object matches = success.matches();
-    assertThat(matches).isInstanceOf(int[].class);
-    int[] intMatches = (int[]) matches;
-    assertThat(intMatches).containsExactly(1, 2, 3);
-  }
 
   /**
    * [Happy Path]

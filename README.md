@@ -154,6 +154,8 @@ General clean-ups, TODOs and things I wish to implement for this project:
   simple arrays but I want to use compressed data structures using something like JavaFastPFOR and I might want to use the
   foreign memory API if I figure out that that's the best way to ensure that the data is laid out compactly (plus I want
   to learn the API).
-* [ ] Drop the 'single field' object graph type. I just want to model a "table" or maybe "collection" to use Mongo's term
+* [x] DONE Drop the 'single field' object graph type. I just want to model a "table" or maybe "collection" to use Mongo's term
+* [ ] Use the word 'Table' instead of 'ObjectGraph' and move out lots of the code from `ObjectGraph` because it is
+  distracting and doesn't need to be so tightly coupled/related (especially the static creator methods).
   which is good because it disambiguates it from SQL.
 * [ ] Separate the query API from the query engine. Use different Gradle modules.

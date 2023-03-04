@@ -23,9 +23,6 @@ public sealed interface Query {
     boolean match(String stringUnderTest);
   }
 
-  non-sealed interface SingleFieldIntegerQuery extends Query, IntCriteria {
-  }
-
   record OrdinalSingleFieldIntegerQuery(int ordinal, IntCriteria intCriteria) implements Query {
   }
 

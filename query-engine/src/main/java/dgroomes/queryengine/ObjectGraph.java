@@ -97,11 +97,11 @@ public sealed interface ObjectGraph {
    */
   sealed interface Column {
 
-    record BooleanColumn(boolean[] bools) implements Column, ObjectGraph {}
+    record BooleanColumn(boolean[] bools) implements Column {}
 
-    record IntegerColumn(int[] ints) implements Column, ObjectGraph {}
+    record IntegerColumn(int[] ints) implements Column {}
 
-    record StringColumn(String[] strings) implements Column, ObjectGraph {}
+    record StringColumn(String[] strings) implements Column {}
 
     // Note: maybe modelling an association as a column of the entity is a bad idea. After all, the association is
     // usually goes both ways (bi-directional) in meaning. For example, a city is contained in a state and that state
