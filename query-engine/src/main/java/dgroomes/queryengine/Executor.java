@@ -35,20 +35,21 @@ public class Executor {
   public static QueryResult match(Query query, Table table) {
     Objects.requireNonNull(query, "The 'query' argument must not be null");
     Objects.requireNonNull(table, "The 'table' argument must not be null");
+
     return switch (query) {
-      case Query.OrdinalSingleFieldIntegerQuery query1 -> {
-        if (table.columns().size() < query1.ordinal()) {
-          var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(query1.ordinal(), table.columns().size());
+      case Query.OrdinalSingleFieldIntegerQuery(int ordinal, Criteria.IntCriteria criteria) -> {
+        if (table.width() < ordinal) {
+          var msg = "The query ordinal '%d' is out of bounds for this table because it has a width of %d columns".formatted(ordinal, table.width());
           yield new QueryResult.Failure(msg);
         }
 
-        Column column1 = table.columns().get(query1.ordinal());
+        Column column1 = table.columns().get(ordinal);
 
         // Make sure the types match. For example, a query directed at column 3 must match a table with an integer
         // column in the 3rd position.
         if (column1 instanceof IntegerColumn intColumn) {
           int[] indexMatches = IntStream.range(0, intColumn.ints().length)
-                  .filter(i -> query1.intCriteria().match(intColumn.ints()[i]))
+                  .filter(i -> criteria.match(intColumn.ints()[i]))
                   .toArray();
 
           Table pruned = table.prune(indexMatches);
@@ -133,7 +134,7 @@ public class Executor {
         var pruned = currentEntity.prune(indexMatches);
         yield new QueryResult.Success(pruned);
       }
-      case Query.PointedStringCriteriaQuery pointedCriteriaQuery -> {
+      case Query.PointedStringCriteriaQuery(var criteriaList) -> {
         // Most of this is copy/pasted from the earlier block. I'm going to refactor this eventually because I'm still in
         // discovery mode.
         if (table instanceof Table multiColumnEntity) {
@@ -142,7 +143,7 @@ public class Executor {
           int[] rootIndexMatches = IntStream.range(0, multiColumnEntity.size()).toArray();
 
           criteriaLoop:
-          for (Query.PointedStringCriteria pointedStringCriteria : pointedCriteriaQuery.pointedCriteriaList()) {
+          for (Query.PointedStringCriteria pointedStringCriteria : criteriaList) {
             var pointer = pointedStringCriteria.pointer();
             var stringCriteria = pointedStringCriteria.criteria();
 

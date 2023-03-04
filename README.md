@@ -165,3 +165,5 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [ ] Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
   allows multiple criteria of multiple types (e.g. string and int).
 * [ ] IN PROGRESS Consolidate the duplicative code in `Executor`.
+* [ ] Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
+* [ ] Criteria/criterion language. Consider it. singular/plural. I don't care much.

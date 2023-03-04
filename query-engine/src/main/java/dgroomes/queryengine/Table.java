@@ -24,6 +24,13 @@ import java.util.stream.IntStream;
 public record Table(List<Column> columns) {
 
   /**
+   * The number of columns.
+   */
+  public int width() {
+    return columns.size();
+  }
+
+  /**
    * Convenience method for creating an {@link Column.IntegerColumn} for toy examples, like in test cases.
    */
   public static Table ofColumns(Column... columns) {
