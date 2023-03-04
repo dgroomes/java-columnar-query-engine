@@ -9,18 +9,12 @@ import java.util.HashSet;
 import java.util.stream.IntStream;
 
 /**
- * WIP
- * <p>
- * This is a pattern matching query engine (like the 'cypher' query language). It does not do aggregations.
+ * This is a toy pattern matching query engine (like the 'cypher' query language). It does not do aggregations.
  * There is no query "language" and instead it's just a Java API.
  */
 public class Executor {
 
-  // columns? entities? joins/associations? schemas?
-
   /**
-   * WIP
-   * <p>
    * Given a query (should the query encapsulate the data source? answer: probably not the data source but probably the
    * schema?), return a list of matching records.
    * <p>
@@ -267,7 +261,7 @@ public class Executor {
   }
 
   public sealed interface QueryResult permits QueryResult.Success, QueryResult.Failure {
-    record Success(Object matches) implements QueryResult {
+    record Success(Table matchingSubset) implements QueryResult {
     }
 
     record Failure(String message) implements QueryResult {

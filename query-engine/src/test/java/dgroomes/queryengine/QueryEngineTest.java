@@ -1,8 +1,8 @@
 package dgroomes.queryengine;
 
+import dgroomes.queryengine.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Success;
-import dgroomes.queryengine.Column.IntegerColumn;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -33,11 +33,9 @@ public class QueryEngineTest {
     // Assert
     assertThat(result).isInstanceOf(Success.class);
     Success success = (Success) result;
-    Object matches = success.matches();
-    assertThat(matches).isInstanceOf(Table.class);
-    Table multiColumnEntityMatches = (Table) matches;
-    assertThat(multiColumnEntityMatches.columns()).hasSize(1);
-    Column firstColumn = multiColumnEntityMatches.columns().get(0);
+    Table matchingSubset = success.matchingSubset();
+    assertThat(matchingSubset.columns()).hasSize(1);
+    Column firstColumn = matchingSubset.columns().get(0);
     assertThat(firstColumn).isInstanceOf(IntegerColumn.class);
     var intMatches = (IntegerColumn) firstColumn;
     assertThat(intMatches.ints()).containsExactly(1, 2, 3);
@@ -63,11 +61,9 @@ public class QueryEngineTest {
     // Assert
     assertThat(result).isInstanceOf(Success.class);
     Success success = (Success) result;
-    Object matches = success.matches();
-    assertThat(matches).isInstanceOf(Table.class);
-    Table multiColumnEntityMatches = (Table) matches;
-    assertThat(multiColumnEntityMatches.columns()).hasSize(2);
-    Column cityColumn = multiColumnEntityMatches.columns().get(0);
+    Table matchingSubset = success.matchingSubset();
+    assertThat(matchingSubset.columns()).hasSize(2);
+    Column cityColumn = matchingSubset.columns().get(0);
     assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
     var cityMatches = (Column.StringColumn) cityColumn;
     assertThat(cityMatches.strings()).containsExactly("Rochester");
@@ -95,11 +91,9 @@ public class QueryEngineTest {
     // Assert
     assertThat(result).isInstanceOf(Success.class);
     Success success = (Success) result;
-    Object matches = success.matches();
-    assertThat(matches).isInstanceOf(Table.class);
-    Table multiColumnEntityMatches = (Table) matches;
-    assertThat(multiColumnEntityMatches.columns()).hasSize(1);
-    Column firstColumn = multiColumnEntityMatches.columns().get(0);
+    Table matchingSubset = success.matchingSubset();
+    assertThat(matchingSubset.columns()).hasSize(1);
+    Column firstColumn = matchingSubset.columns().get(0);
     assertThat(firstColumn).isInstanceOf(Column.StringColumn.class);
     var stringMatches = (Column.StringColumn) firstColumn;
     assertThat(stringMatches.strings()).containsExactly("b", "c", "c");
@@ -134,11 +128,9 @@ public class QueryEngineTest {
       // Assert
       assertThat(result).isInstanceOf(Success.class);
       Success success = (Success) result;
-      Object matches = success.matches();
-      assertThat(matches).isInstanceOf(Table.class);
-      Table multiColumnEntityMatches = (Table) matches;
-      assertThat(multiColumnEntityMatches.columns()).hasSize(2);
-      Column cityColumn = multiColumnEntityMatches.columns().get(0);
+      Table matchingSubset = success.matchingSubset();
+      assertThat(matchingSubset.columns()).hasSize(2);
+      Column cityColumn = matchingSubset.columns().get(0);
       assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
       var cityMatches = (Column.StringColumn) cityColumn;
       assertThat(cityMatches.strings()).containsExactly("Pierre");
@@ -154,11 +146,9 @@ public class QueryEngineTest {
       // Assert
       assertThat(result).isInstanceOf(Success.class);
       Success success = (Success) result;
-      Object matches = success.matches();
-      assertThat(matches).isInstanceOf(Table.class);
-      Table multiColumnEntityMatches = (Table) matches;
-      assertThat(multiColumnEntityMatches.columns()).hasSize(2);
-      Column cityColumn = multiColumnEntityMatches.columns().get(0);
+      Table matchingSubset = success.matchingSubset();
+      assertThat(matchingSubset.columns()).hasSize(2);
+      Column cityColumn = matchingSubset.columns().get(0);
       assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
       var cityMatches = (Column.StringColumn) cityColumn;
       assertThat(cityMatches.strings()).containsExactly("Minneapolis", "Duluth");
