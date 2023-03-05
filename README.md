@@ -166,5 +166,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   allows multiple criteria of multiple types (e.g. string and int).
 * [ ] IN PROGRESS Consolidate the duplicative code in `Executor`.
   * DONE Remove `PointerSingleFieldStringQuery` because it is obsolete with the more powerful `PointedStringCriteriaQuery`.
+  * IN PROGRESS What else? Extract some methods, perhaps some utility methods that are even generic enough to be in a
+    separate module.
 * [ ] Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
 * [ ] Criteria/criterion language. Consider it. singular/plural. I don't care much.

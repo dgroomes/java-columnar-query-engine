@@ -4,6 +4,7 @@ import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Pointer;
 import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
+import dgroomes.util.Util;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -43,11 +44,11 @@ public class Executor {
           yield new QueryResult.Failure(msg);
         }
 
-        Column column1 = table.columns().get(ordinal);
+        Column column = table.columns().get(ordinal);
 
         // Make sure the types match. For example, a query directed at column 3 must match a table with an integer
         // column in the 3rd position.
-        if (column1 instanceof IntegerColumn intColumn) {
+        if (column instanceof IntegerColumn intColumn) {
           int[] indexMatches = IntStream.range(0, intColumn.ints().length)
                   .filter(i -> criteria.match(intColumn.ints()[i]))
                   .toArray();
@@ -55,7 +56,7 @@ public class Executor {
           Table pruned = table.prune(indexMatches);
           yield new QueryResult.Success(pruned);
         } else {
-          yield new QueryResult.Failure("The queried column type '%s' is not an integer array but the query is for an integer.".formatted(column1.getClass().getSimpleName()));
+          yield new QueryResult.Failure("The queried column type '%s' is not an integer array but the query is for an integer.".formatted(column.getClass().getSimpleName()));
         }
       }
       case Query.PointedStringCriteriaQuery(var criteriaList) -> {
@@ -124,23 +125,7 @@ public class Executor {
                 // Prune down the root index matches to the ones that match this pointed criteria search.
                 // We don't use the actual 'prune' method but instead do an intersection of the two integer arrays. Because
                 // the arrays are ordered, we can do a zipper intersection.
-                int[] pruned = new int[indexMatches.length]; // This size is a bit arbitrary. I just made it the max size we I don't have to bother resizing it during the zipper procedure.
-                int prunedIndex = 0;
-                int rootIndexMatchesIndex = 0;
-                int indexMatchesIndex = 0;
-                while (rootIndexMatchesIndex < rootIndexMatches.length && indexMatchesIndex < indexMatches.length) {
-                  if (rootIndexMatches[rootIndexMatchesIndex] == indexMatches[indexMatchesIndex]) {
-                    pruned[prunedIndex++] = rootIndexMatches[rootIndexMatchesIndex];
-                    rootIndexMatchesIndex++;
-                    indexMatchesIndex++;
-                  } else if (rootIndexMatches[rootIndexMatchesIndex] < indexMatches[indexMatchesIndex]) {
-                    rootIndexMatchesIndex++;
-                  } else {
-                    indexMatchesIndex++;
-                  }
-                }
-
-                rootIndexMatches = Arrays.copyOf(pruned, prunedIndex);
+                rootIndexMatches = Util.zipperIntersection(rootIndexMatches, indexMatches);
                 // Yes I'm using a 'continue'! Probably a very unpopular choice but during the exploratory work, it's
                 // convenient to write top-down code and so we don't have the luxury of the return statement because that
                 // would return from the entire method.
