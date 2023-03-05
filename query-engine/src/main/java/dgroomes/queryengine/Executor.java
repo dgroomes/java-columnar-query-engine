@@ -53,7 +53,7 @@ public class Executor {
                   .filter(i -> criteria.match(intColumn.ints()[i]))
                   .toArray();
 
-          Table pruned = table.prune(indexMatches);
+          Table pruned = prune(table, indexMatches);
           yield new QueryResult.Success(pruned);
         } else {
           yield new QueryResult.Failure("The queried column type '%s' is not an integer array but the query is for an integer.".formatted(column.getClass().getSimpleName()));
@@ -153,7 +153,7 @@ public class Executor {
             }
           }
 
-          var pruned = multiColumnEntity.prune(rootIndexMatches);
+          var pruned = prune(multiColumnEntity, rootIndexMatches);
           yield new QueryResult.Success(pruned);
         } else {
           var msg = "The table type '%s' cannot be queried by query type '%s'".formatted(table.getClass().getSimpleName(), query.getClass().getSimpleName());
@@ -161,6 +161,55 @@ public class Executor {
         }
       }
     };
+  }
+
+  /**
+   * Prune the table down to the rows at the given indices. This is designed to be used after evaluating the query
+   * criteria where we have identified a set of rows (by index) that matched the criteria.
+   */
+  private static Table prune(Table table, int[] indices) {
+
+    // Clone each column and prune the data set down to the given indices
+    // Note: This is a little heavy-handed. It would be cheaper to track a view of the "pruned column" by saving the
+    // indices instead of copying the individual values. This is especially true for large swaths of data. On the other
+    // hand, I suppose that this method is only designed to be used for the final hand-off of the query results to the
+    // user. Ostensibly, the query pared down the universe to a small fraction of the data. I suppose there is always an
+    // understood risk when a user query asks for a huge swatch of data (knowingly or naively).
+    List<Column> prunedColumns = table.columns().stream()
+            .map(column -> switch (column) {
+              case Column.BooleanColumn(var bools) -> {
+                var pruned = new boolean[indices.length];
+                for (int i = 0; i < indices.length; i++) {
+                  pruned[i] = bools[indices[i]];
+                }
+                yield new Column.BooleanColumn(pruned);
+              }
+              case IntegerColumn(var ints) -> {
+                var pruned = new int[indices.length];
+                for (int i = 0; i < indices.length; i++) {
+                  pruned[i] = ints[indices[i]];
+                }
+                yield new IntegerColumn(pruned);
+              }
+              case Column.StringColumn(var strings) -> {
+                var pruned = new String[indices.length];
+                for (int i = 0; i < indices.length; i++) {
+                  pruned[i] = strings[indices[i]];
+                }
+                yield new Column.StringColumn(pruned);
+              }
+              case Column.AssociationColumn associationColumn -> {
+                var associations = associationColumn.associations;
+                var pruned = new Association[indices.length];
+                for (int i = 0; i < indices.length; i++) {
+                  pruned[i] = associations[indices[i]];
+                }
+                yield new Column.AssociationColumn(associationColumn.associatedEntity, pruned);
+              }
+            })
+            .toList();
+
+    return new Table(new ArrayList<>(prunedColumns));
   }
 
   public sealed interface QueryResult permits QueryResult.Success, QueryResult.Failure {
