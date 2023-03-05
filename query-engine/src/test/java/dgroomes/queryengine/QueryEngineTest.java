@@ -5,12 +5,17 @@ import dgroomes.queryapi.Pointer;
 import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
+import dgroomes.queryengine.Executor.QueryResult.Failure;
 import dgroomes.queryengine.Executor.QueryResult.Success;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static dgroomes.queryengine.Column.ofInts;
+import static dgroomes.queryengine.Table.ofColumns;
+import static dgroomes.queryengine.TestUtil.failed;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
@@ -24,24 +29,32 @@ public class QueryEngineTest {
   /**
    * [Happy Path]
    * Ordinal integer query over a multi-field (i.e. column) type that contains one column.
+   * <p>
+   * Note: I'm using a minimal amount of AssertJ in this test and instead favoring pure Java language features like
+   * pattern matching. This is more verbose. I' not sure if it's better or worse; it's just different.
    */
   @Test
   void intQuery_oneColumnTable() {
-    Table corpus = Table.ofColumns(Column.ofInts(-1, 0, 1, 2, 3));
+    // Arrange
+    var table = ofColumns(ofInts(-1, 0, 1, 2, 3));
     var query = new Query.OrdinalSingleFieldIntegerQuery(0, i -> i > 0);
 
     // Act
-    QueryResult result = Executor.match(query, corpus);
+    QueryResult result = Executor.match(query, table);
 
     // Assert
-    assertThat(result).isInstanceOf(Success.class);
-    Success success = (Success) result;
-    Table matchingSubset = success.matchingSubset();
-    assertThat(matchingSubset.columns()).hasSize(1);
-    Column firstColumn = matchingSubset.columns().get(0);
-    assertThat(firstColumn).isInstanceOf(IntegerColumn.class);
-    var intMatches = (IntegerColumn) firstColumn;
-    assertThat(intMatches.ints()).containsExactly(1, 2, 3);
+    List<Column> columns = switch (result) {
+      case Failure(var msg) -> fail(msg);
+      case Success(Table(List<Column> c)) -> c;
+    };
+
+    assertThat(columns).hasSize(1);
+    Column firstColumn = columns.get(0);
+    if (!(firstColumn instanceof IntegerColumn(var ints))) {
+      throw failed("Expected an IntegerColumn but got a " + firstColumn.getClass().getSimpleName());
+    }
+
+    assertThat(ints).containsExactly(1, 2, 3);
   }
 
   /**
@@ -50,12 +63,12 @@ public class QueryEngineTest {
    */
   @Test
   void intQuery_twoColumnTable() {
-    Table corpus = Table.ofColumns(
+    Table corpus = ofColumns(
             // City names
             Column.ofStrings("Minneapolis", "Rochester", "Duluth"),
 
             // City populations
-            Column.ofInts(425_336, 121_395, 86_697));
+            ofInts(425_336, 121_395, 86_697));
     var query = new Query.OrdinalSingleFieldIntegerQuery(1, pop -> pop > 100_000 && pop < 150_000);
 
     // Act
@@ -64,7 +77,7 @@ public class QueryEngineTest {
     // Assert
     assertThat(result).isInstanceOf(Success.class);
     Success success = (Success) result;
-    Table matchingSubset = success.matchingSubset();
+    Table matchingSubset = success.resultSet();
     assertThat(matchingSubset.columns()).hasSize(2);
     Column cityColumn = matchingSubset.columns().get(0);
     assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
@@ -82,7 +95,7 @@ public class QueryEngineTest {
     //
     // We're going to search over a simple collection of strings to find those that are greater than "a" but less than
     // "d". This test case is interesting because we're exercising two criteria in a single query.
-    Table corpus = Table.ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
+    Table corpus = ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
 
     var query = new Query.PointedStringCriteriaQuery(List.of(
             new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
@@ -94,7 +107,7 @@ public class QueryEngineTest {
     // Assert
     assertThat(result).isInstanceOf(Success.class);
     Success success = (Success) result;
-    Table matchingSubset = success.matchingSubset();
+    Table matchingSubset = success.resultSet();
     assertThat(matchingSubset.columns()).hasSize(1);
     Column firstColumn = matchingSubset.columns().get(0);
     assertThat(firstColumn).isInstanceOf(Column.StringColumn.class);
@@ -110,8 +123,8 @@ public class QueryEngineTest {
    */
   @Test
   void queryOnAssociationProperty() {
-    Table cities = Table.ofColumns(Column.ofStrings("Minneapolis", "Pierre", "Duluth"));
-    Table states = Table.ofColumns(Column.ofStrings("Minnesota", "South Dakota"));
+    Table cities = ofColumns(Column.ofStrings("Minneapolis", "Pierre", "Duluth"));
+    Table states = ofColumns(Column.ofStrings("Minnesota", "South Dakota"));
     // The "contained in" association from city to state. It is based on the index position of the cities and states
     // expressed above.
     cities.associateTo(states,
@@ -131,7 +144,7 @@ public class QueryEngineTest {
       // Assert
       assertThat(result).isInstanceOf(Success.class);
       Success success = (Success) result;
-      Table matchingSubset = success.matchingSubset();
+      Table matchingSubset = success.resultSet();
       assertThat(matchingSubset.columns()).hasSize(2);
       Column cityColumn = matchingSubset.columns().get(0);
       assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);
@@ -150,7 +163,7 @@ public class QueryEngineTest {
       // Assert
       assertThat(result).isInstanceOf(Success.class);
       Success success = (Success) result;
-      Table matchingSubset = success.matchingSubset();
+      Table matchingSubset = success.resultSet();
       assertThat(matchingSubset.columns()).hasSize(2);
       Column cityColumn = matchingSubset.columns().get(0);
       assertThat(cityColumn).isInstanceOf(Column.StringColumn.class);

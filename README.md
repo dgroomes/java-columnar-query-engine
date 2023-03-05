@@ -164,9 +164,12 @@ General clean-ups, TODOs and things I wish to implement for this project:
   type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
 * [ ] Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
   allows multiple criteria of multiple types (e.g. string and int).
-* [ ] IN PROGRESS Consolidate the duplicative code in `Executor`.
+* [ ] Consolidate the duplicative code in `Executor`.
   * DONE Remove `PointerSingleFieldStringQuery` because it is obsolete with the more powerful `PointedStringCriteriaQuery`.
-  * IN PROGRESS What else? Extract some methods, perhaps some utility methods that are even generic enough to be in a
-    separate module.
+  * DONE Extract some common methods
+  * DONE Be consistent about a 'result set' return type. Combine it with the final "prune" operation.
+  * What else?
+* [ ] IN PROGRESS Use less AssertJ (although I love it) and rely on pattern matching and plain Java a bit more in the tests.
 * [ ] Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
 * [ ] Criteria/criterion language. Consider it. singular/plural. I don't care much.
+* [ ] Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.

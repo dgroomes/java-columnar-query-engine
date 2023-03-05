@@ -19,7 +19,10 @@ public class Executor {
    * Given a query (should the query encapsulate the data source? answer: probably not the data source but probably the
    * schema?), return a list of matching records.
    * <p>
-   * Tentative decision: this does not return a cursor.
+   * Decision: This method returns the query result set as a "value". In other words, this method does not return a
+   * "view" of the result set and it does not return a cursor over the result set. This is a conscious decision. This
+   * design allows for a less complex implementation. I'm more interested in spending my time learning concepts with
+   * this project than I am interested in maximizing user features/options.
    * <p>
    * Tentative decision: this returns a pruned table. Consider a table that represents a city. It has two columns:
    * "city_name" and "state code". Return a new table where its component columns are pruned down to the entries that
@@ -53,8 +56,7 @@ public class Executor {
                   .filter(i -> criteria.match(intColumn.ints()[i]))
                   .toArray();
 
-          Table pruned = prune(table, indexMatches);
-          yield new QueryResult.Success(pruned);
+          yield toResultSet(table, indexMatches);
         } else {
           yield new QueryResult.Failure("The queried column type '%s' is not an integer array but the query is for an integer.".formatted(column.getClass().getSimpleName()));
         }
@@ -153,8 +155,7 @@ public class Executor {
             }
           }
 
-          var pruned = prune(multiColumnEntity, rootIndexMatches);
-          yield new QueryResult.Success(pruned);
+          yield toResultSet(multiColumnEntity, rootIndexMatches);
         } else {
           var msg = "The table type '%s' cannot be queried by query type '%s'".formatted(table.getClass().getSimpleName(), query.getClass().getSimpleName());
           yield new QueryResult.Failure(msg);
@@ -164,17 +165,12 @@ public class Executor {
   }
 
   /**
-   * Prune the table down to the rows at the given indices. This is designed to be used after evaluating the query
-   * criteria where we have identified a set of rows (by index) that matched the criteria.
+   * Prune the table down to the rows at the matching indices This represents the final "result set" of the query.
+   * <p>
+   * This is designed to be used after evaluating the query criteria where we have identified a set of rows (by index)
+   * that matched the criteria.
    */
-  private static Table prune(Table table, int[] indices) {
-
-    // Clone each column and prune the data set down to the given indices
-    // Note: This is a little heavy-handed. It would be cheaper to track a view of the "pruned column" by saving the
-    // indices instead of copying the individual values. This is especially true for large swaths of data. On the other
-    // hand, I suppose that this method is only designed to be used for the final hand-off of the query results to the
-    // user. Ostensibly, the query pared down the universe to a small fraction of the data. I suppose there is always an
-    // understood risk when a user query asks for a huge swatch of data (knowingly or naively).
+  private static QueryResult.Success toResultSet(Table table, int[] indices) {
     List<Column> prunedColumns = table.columns().stream()
             .map(column -> switch (column) {
               case Column.BooleanColumn(var bools) -> {
@@ -209,11 +205,11 @@ public class Executor {
             })
             .toList();
 
-    return new Table(new ArrayList<>(prunedColumns));
+    return new QueryResult.Success(new Table(prunedColumns));
   }
 
   public sealed interface QueryResult permits QueryResult.Success, QueryResult.Failure {
-    record Success(Table matchingSubset) implements QueryResult {
+    record Success(Table resultSet) implements QueryResult {
     }
 
     record Failure(String message) implements QueryResult {
