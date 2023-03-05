@@ -58,82 +58,6 @@ public class Executor {
           yield new QueryResult.Failure("The queried column type '%s' is not an integer array but the query is for an integer.".formatted(column1.getClass().getSimpleName()));
         }
       }
-      case Query.PointerSingleFieldStringQuery(
-              Pointer pointer, Criteria.StringCriteria stringCriteria
-      ) -> {
-        // Implement a recursive/iterative search algorithm. Here is some hard work.
-        //
-        // Algorithm working notes. We need to descend the table's fields and its associated tables following the pointer, all the while verifying that
-        // the pointer is "legal" (meaning it follows columns that exist and all the columns are association columns except
-        // for the last one which is a string column). When we reach the end of the pointer, we can apply the string criteria.
-        // But then we have to follow back up the pointer and prune the table.
-
-        // I need to group things together during the query execution, like grouping columns with their owning entities.
-        // This is some unfortunate glue code. consider refactoring.
-        //
-        // We group an entity and an associated column together. Because an associated column points to another entity,
-        // we call this a "directional context". Hopefully this helps me understand what I'm doing.
-        record DirectionalContextGrouping(Table entity,
-                                          Column.AssociationColumn associationColumn) {}
-
-        Deque<DirectionalContextGrouping> groupings = new ArrayDeque<>();
-
-        Table currentEntity = table;
-        Pointer currentPointer = pointer;
-        int[] indexMatches;
-        while (true) {
-          if (currentPointer instanceof Pointer.Ordinal(int ordinal)) {
-            // We've bottomed out. Match the data on the criteria.
-            if (currentEntity.columns().size() < ordinal) {
-              var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(ordinal, currentEntity.columns().size());
-              yield new QueryResult.Failure(msg);
-            }
-
-            Column column = currentEntity.columns().get(ordinal);
-            if (column instanceof Column.StringColumn stringColumn) {
-              indexMatches = IntStream.range(0, stringColumn.strings().length)
-                      .filter(i -> stringCriteria.match(stringColumn.strings()[i]))
-                      .toArray();
-              break;
-            } else {
-              yield new QueryResult.Failure("The queried column type '%s' is not a string array but the query is for a string.".formatted(column.getClass().getSimpleName()));
-            }
-
-          } else if (currentPointer instanceof Pointer.NestedPointer(int ordinal, Pointer nextPointer)) {
-            var associationColumn = (Column.AssociationColumn) currentEntity.columns().get(ordinal);
-            groupings.add(new DirectionalContextGrouping(currentEntity, associationColumn));
-            currentPointer = nextPointer;
-            currentEntity = associationColumn.associatedEntity;
-          } else {
-            yield new QueryResult.Failure("I'm not sure what happened.");
-          }
-        }
-
-        int[] EMPTY = new int[0];
-
-        // Follow the matched indices back up the graph by tracing the associations.
-        while (!groupings.isEmpty()) {
-          DirectionalContextGrouping group = groupings.pop();
-          currentEntity = group.entity();
-          Column.AssociationColumn associationColumn = group.associationColumn();
-          Association[] reverseAssociations = associationColumn.reverseAssociatedColumn().associations;
-          var nextMatches = new HashSet<Integer>();
-          for (int i : indexMatches) {
-            Association reverseAssociation = reverseAssociations[i];
-            var toAdd = switch (reverseAssociation) {
-              case Association.Many(var indices) -> indices;
-              case Association.One(var index) -> new int[]{index};
-              case Association.None ignored -> EMPTY;
-            };
-            for (int toAddI : toAdd) {
-              nextMatches.add(toAddI);
-            }
-          }
-          indexMatches = nextMatches.stream().mapToInt(i -> i).toArray();
-        }
-        var pruned = currentEntity.prune(indexMatches);
-        yield new QueryResult.Success(pruned);
-      }
       case Query.PointedStringCriteriaQuery(var criteriaList) -> {
         // Most of this is copy/pasted from the earlier block. I'm going to refactor this eventually because I'm still in
         // discovery mode.
@@ -143,7 +67,11 @@ public class Executor {
           int[] rootIndexMatches = IntStream.range(0, multiColumnEntity.size()).toArray();
 
           criteriaLoop:
-          for (Query.PointedStringCriteria pointedStringCriteria : criteriaList) {
+          for (Criteria.PointedStringCriteria pointedStringCriteria : criteriaList) {
+            // Algorithm working notes. We need to descend the table's fields and its associated tables following the pointer, all the while verifying that
+            // the pointer is "legal" (meaning it follows columns that exist and all the columns are association columns except
+            // for the last one which is a string column). When we reach the end of the pointer, we can apply the string criteria.
+            // But then we have to follow back up the pointer and prune the table.
             var pointer = pointedStringCriteria.pointer();
             var stringCriteria = pointedStringCriteria.criteria();
 

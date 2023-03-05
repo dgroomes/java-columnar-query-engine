@@ -16,10 +16,5 @@ public sealed interface Query {
 
   record OrdinalSingleFieldIntegerQuery(int ordinal, Criteria.IntCriteria intCriteria) implements Query {}
 
-  record PointerSingleFieldStringQuery(Pointer pointer, Criteria.StringCriteria stringCriteria) implements Query {}
-
-  record PointedStringCriteriaQuery(List<PointedStringCriteria> pointedCriteriaList) implements Query {}
-
-  record PointedStringCriteria(Pointer pointer, Criteria.StringCriteria criteria) {}
-
+  record PointedStringCriteriaQuery(List<Criteria.PointedStringCriteria> pointedCriteriaList) implements Query {}
 }

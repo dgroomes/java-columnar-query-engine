@@ -8,4 +8,6 @@ sealed public interface Criteria permits Criteria.IntCriteria, Criteria.StringCr
   non-sealed interface StringCriteria extends Criteria {
     boolean match(String stringUnderTest);
   }
+
+  record PointedStringCriteria(Pointer pointer, StringCriteria criteria) {}
 }
