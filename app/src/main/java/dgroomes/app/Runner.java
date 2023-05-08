@@ -217,7 +217,7 @@ public class Runner {
         String city = cityNameColumn.strings()[cityIndex];
         int stateIndex = ((Association.One) cityStateColumn.associations[cityIndex]).idx();
         String stateCode = stateCodeColumn.strings()[stateIndex];
-        log.info("The ZIP code with the highest population is {} in {}, {} with a population of {}.", code, city, stateCode, Util.formatInteger(maxPopulation));
+        log.info("The ZIP code with the highest population is '{}' in {}, {} with a population of {}.", code, city, stateCode, Util.formatInteger(maxPopulation));
       }
 
       {
