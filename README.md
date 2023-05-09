@@ -113,18 +113,6 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [x] DONE Replace Arrow usage with straight array usage. (Remember, I copied this project over from a subproject in my `arrow-playground`
-  repo). I think I'll create loading code (file I/O, JSON parsing) and keep it decoupled from the generic columnar
-  code (it's own JPMS module) and then create a bridge module that describes the geograhies data using the APIs of the
-  columnar/engine module.
-  * DONE (it's just a package not a JPMS module) Create the loader module. (glue code)
-  * DONE Create Gradle subprojects (and JPMS modularized). I'm kind of dragging my feet by doing this but I like this style.
-  * DONE (extremely rough but working) Create the query engine module. (generic/API/high-value code)
-  *   DONE Start associations
-  *   DONE two-way associations
-  *   DONE Query over associations (I have a test case but the code is going to take a lot of work)
-  * DONE Load the geography data into the appropriate in-memory format.
-* [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.
 * [ ] Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
   and do a query by something like "find states adjacent to states that have at least a ZIP code with a population of 1,000,000"
   (or a more illustrative query if you can think of one)
@@ -156,12 +144,6 @@ General clean-ups, TODOs and things I wish to implement for this project:
   simple arrays but I want to use compressed data structures using something like JavaFastPFOR and I might want to use the
   foreign memory API if I figure out that that's the best way to ensure that the data is laid out compactly (plus I want
   to learn the API).
-* [x] DONE Drop the 'single field' object graph type. I just want to model a "table" or maybe "collection" to use Mongo's term
-* [x] DONE Use the word 'Table' instead of 'ObjectGraph' and lift out the many types from `ObjectGraph` into top-level
-  classes because it is distracting being so tightly coupled/related (especially with the static creator methods).
-  which is good because it disambiguates it from SQL.
-* [x] DONE (answer: yes) Can we make the query execution signature return a table?
-* [x] DONE Separate the query API from the query engine. Use different Gradle modules.
 * [ ] Generic type parameters should work on the 'match' method. It takes a table and returns table of the exact same
   type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
 * [ ] Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
@@ -171,7 +153,6 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Extract some common methods
   * DONE Be consistent about a 'result set' return type. Combine it with the final "prune" operation.
   * What else?
-* [x] DONE Use less AssertJ (although I love it) and rely on pattern matching and plain Java a bit more in the tests.
 * [ ] Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
 * [ ] Criteria/criterion language. Consider it. singular/plural. I don't care much.
 * [ ] Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.
@@ -189,3 +170,26 @@ General clean-ups, TODOs and things I wish to implement for this project:
   I want to use the latest version of Java (currently 20), but the latest version of
   Gradle (8.1) only supports up to Java 19 when running Gradle itself but can support Java 20 for "forked work" like
   compilation, testing and running the program. See the [Gradle Compatibility Matrix](https://docs.gradle.org/current/userguide/compatibility.html#java).
+
+
+## Finished Wish List Items
+
+* [x] DONE Replace Arrow usage with straight array usage. (Remember, I copied this project over from a subproject in my `arrow-playground`
+  repo). I think I'll create loading code (file I/O, JSON parsing) and keep it decoupled from the generic columnar
+  code (it's own JPMS module) and then create a bridge module that describes the geograhies data using the APIs of the
+  columnar/engine module.
+  * DONE (it's just a package not a JPMS module) Create the loader module. (glue code)
+  * DONE Create Gradle subprojects (and JPMS modularized). I'm kind of dragging my feet by doing this but I like this style.
+  * DONE (extremely rough but working) Create the query engine module. (generic/API/high-value code)
+  *   DONE Start associations
+  *   DONE two-way associations
+  *   DONE Query over associations (I have a test case but the code is going to take a lot of work)
+  * DONE Load the geography data into the appropriate in-memory format.
+* [x] DONE Model the data in Apache Arrow's table abstractions. Use `Table` even knowing it is experimental.
+* [x] DONE Drop the 'single field' object graph type. I just want to model a "table" or maybe "collection" to use Mongo's term
+* [x] DONE Use the word 'Table' instead of 'ObjectGraph' and lift out the many types from `ObjectGraph` into top-level
+  classes because it is distracting being so tightly coupled/related (especially with the static creator methods).
+  which is good because it disambiguates it from SQL.
+* [x] DONE (answer: yes) Can we make the query execution signature return a table?
+* [x] DONE Separate the query API from the query engine. Use different Gradle modules.
+* [x] DONE Use less AssertJ (although I love it) and rely on pattern matching and plain Java a bit more in the tests.
