@@ -172,6 +172,13 @@ General clean-ups, TODOs and things I wish to implement for this project:
   I want to use the latest version of Java (currently 20), but the latest version of
   Gradle (8.1) only supports up to Java 19 when running Gradle itself but can support Java 20 for "forked work" like
   compilation, testing and running the program. See the [Gradle Compatibility Matrix](https://docs.gradle.org/current/userguide/compatibility.html#java).
+* [ ] POJO (static) vs `Table` (dynamic) tension. By necessity, the query engine and its core API needs to be implemented
+  with dynamism to accommodate tables of different widths and types but as application developers, we want to work with
+  static types like a `State` POJO. This is what I envision the `geography-query` to demonstrate: it will bridge the
+  dynamic query API to a static/specific domain. Now that I type all this out, I realize that modeling the static stuff
+  and a "view/wrapper" class is a secondary concern for this project. I really want to focus on the query engine
+  algorithm. Still, it's a valid nice-to-have. Or, seriously consider deleting the code and marking this wish list item
+  as "won't do".
 
 
 ## Finished Wish List Items
