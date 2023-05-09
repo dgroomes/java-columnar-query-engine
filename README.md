@@ -169,7 +169,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Extract some common methods
   * DONE Be consistent about a 'result set' return type. Combine it with the final "prune" operation.
   * What else?
-* [ ] IN PROGRESS Use less AssertJ (although I love it) and rely on pattern matching and plain Java a bit more in the tests.
+* [x] DONE Use less AssertJ (although I love it) and rely on pattern matching and plain Java a bit more in the tests.
 * [ ] Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
 * [ ] Criteria/criterion language. Consider it. singular/plural. I don't care much.
 * [ ] Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.
