@@ -173,3 +173,17 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [ ] Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
 * [ ] Criteria/criterion language. Consider it. singular/plural. I don't care much.
 * [ ] Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.
+* [ ] Upgrade to Java 20. WARNING: I got some serious JVM failures when trying this (I guess this is liable to happen
+  with preview features but I thought preview was more a statement of "this could chnage" not "this could fail").
+  Specifically I got the following.
+  ```text
+  Caused by: java.lang.VerifyError: Inconsistent stackmap frames at branch target 494
+  Exception Details:
+    Location:
+      dgroomes/queryengine/QueryEngineTest.queryOnAssociationProperty()V @494: aload
+    Reason:
+      Type top (current frame, locals[8]) is not assignable to 'dgroomes/queryengine/Executor$QueryResult$Failure' (stack map, locals[8])
+  ```
+  I want to use the latest version of Java (currently 20), but the latest version of
+  Gradle (8.1) only supports up to Java 19 when running Gradle itself but can support Java 20 for "forked work" like
+  compilation, testing and running the program. See the [Gradle Compatibility Matrix](https://docs.gradle.org/current/userguide/compatibility.html#java).
