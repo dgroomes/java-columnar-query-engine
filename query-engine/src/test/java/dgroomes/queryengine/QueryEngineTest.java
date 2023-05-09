@@ -42,14 +42,15 @@ public class QueryEngineTest {
     var columns = switch (result) {
       // By using the 'throw' keyword here, we are being good partners with the compiler because the compiler lets us
       // narrow the type of `result` to `Success` and better yet, we can even extract a reference to the underlying list
-      // of columns because of the "pattern matching for switch" language features.
+      // of columns because of the "record pattern matching" language features.
       //
       // If, by contrast, we used AssertJ to verify the type like this:
       //
       //     assertThat(result).isInstanceOf(Success.class);
       //
-      // The compiler wouldn't be satisfied. We would have to cast 'result' to a 'Success'. Not so bad, but it's
-      // redundant. This style isn't necessarily better, but I want to keep exercising language skills.
+      // We would get a semantic assertion, but the compiler doesn't care. We would have to cast 'result' to a 'Success'.
+      // That's not so bad, but it is redundant. This style isn't necessarily better, but I want to keep exercising
+      // my Java language skills.
       case Failure(var msg) -> throw failed(msg);
       case Success(Table(List<Column> c)) -> c;
     };
