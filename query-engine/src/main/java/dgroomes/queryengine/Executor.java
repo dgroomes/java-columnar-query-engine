@@ -128,7 +128,7 @@ public class Executor {
                 // We don't use the actual 'prune' method but instead do an intersection of the two integer arrays. Because
                 // the arrays are ordered, we can do a zipper intersection.
                 rootIndexMatches = Util.zipperIntersection(rootIndexMatches, indexMatches);
-                // Yes I'm using a 'continue'! Probably a very unpopular choice but during the exploratory work, it's
+                // Yes I'm using a named 'continue'! Probably a very unpopular choice but during the exploratory work, it's
                 // convenient to write top-down code and so we don't have the luxury of the return statement because that
                 // would return from the entire method.
                 continue criteriaLoop;

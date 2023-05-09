@@ -27,7 +27,7 @@ public class QueryEngineTest {
 
   /**
    * [Happy Path]
-   * Ordinal integer query over a multi-field (i.e. column) type that contains one column.
+   * Ordinal integer query over a single-column table.
    */
   @Test
   void intQuery_oneColumnTable() {
@@ -67,7 +67,7 @@ public class QueryEngineTest {
 
   /**
    * [Happy Path]
-   * Ordinal integer query over a multi-field (i.e. column) type that contains two columns.
+   * Ordinal integer query over a multi-column table.
    */
   @Test
   void intQuery_twoColumnTable() {

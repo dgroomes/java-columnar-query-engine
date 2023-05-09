@@ -14,8 +14,6 @@ the design and success of other car models and car makers.
 
 I want all the following characteristics:
 
-* In-memory
-  * This is mostly for convenience. I don't want to deal with file IO.
 * Columnar
   * The data is physically laid out as columns (Java arrays).
 * Schema-ful
@@ -27,6 +25,8 @@ I want all the following characteristics:
   been inspired by [Kuzu](https://github.com/kuzudb/kuzu) which is a property graph database but it has schemas (which I
   like) so doesn't that make it a traditional object database? I tried to build Kuzu from source but had issues (it's
   extremely new; so that's ok) so maybe I'll try Realm (although it's also C++ so I'm scared).
+* In-memory
+  * This is mostly for convenience. I don't want to deal with file IO.
 * Foreign Memory API (stretch goal)
   * I want to lay the memory out not in arrays or objects but in contiguous chunks of off-heap memory. See [JEP 442: Foreign Function & Memory API (Third Preview)](https://openjdk.org/jeps/442).
 * Vectorization (stretch goal)
@@ -128,7 +128,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
     history here. Let's move on. Now I need flesh out the query API.
   * DONE Support multiple criteria for strings.
   * Support multiple criteria for ints. Note: if I take on this work now, I will implement it as another copy/paste
-    change and the code will continue to suffer. If I consolidate the design and implementation first, while benefitting
+    change and the code will continue to suffer. If I consolidate the design and implementation first, while benefiting
     from a solid set of regression tests against an API that I'm also happy enough with (no need to change the API for now!)
     then the refactoring process will be safe/fun and then I come back and implement this task. I need to pay off this
     tech debt (it was a good debt).
@@ -148,7 +148,9 @@ General clean-ups, TODOs and things I wish to implement for this project:
   type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
 * [ ] Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
   allows multiple criteria of multiple types (e.g. string and int).
-* [ ] Consolidate the duplicative code in `Executor`.
+  * What happens to `OrdinalSingleFieldIntegerQuery`. Does this become a type that can be used as a component object in
+    a composite query type (e.g. `MultiPointedCriteriaQuery`)?.
+* [x] DONE (pretty good; the other wish list items capture similar improvement ideas nicely) Consolidate the duplicative code in `Executor`.
   * DONE Remove `PointerSingleFieldStringQuery` because it is obsolete with the more powerful `PointedStringCriteriaQuery`.
   * DONE Extract some common methods
   * DONE Be consistent about a 'result set' return type. Combine it with the final "prune" operation.
