@@ -16,9 +16,6 @@ I want all the following characteristics:
 
 * In-memory
   * This is mostly for convenience. I don't want to deal with file IO.
-* Vectorization
-  * I want to at least vaguely think about vectorized CPU computation in light of Java's [(incubating) vector API](https://openjdk.org/jeps/426). I probably won't implement to this because it's kind of beyond me plus I don't know
-  if it even applies.
 * Columnar
   * The data is physically laid out as columns (Java arrays).
 * Schema-ful
@@ -30,6 +27,11 @@ I want all the following characteristics:
   been inspired by [Kuzu](https://github.com/kuzudb/kuzu) which is a property graph database but it has schemas (which I
   like) so doesn't that make it a traditional object database? I tried to build Kuzu from source but had issues (it's
   extremely new; so that's ok) so maybe I'll try Realm (although it's also C++ so I'm scared).
+* Foreign Memory API (stretch goal)
+  * I want to lay the memory out not in arrays or objects but in contiguous chunks of off-heap memory. See [JEP 442: Foreign Function & Memory API (Third Preview)](https://openjdk.org/jeps/442).
+* Vectorization (stretch goal)
+  * I want to at least vaguely think about vectorized CPU computation in light of Java's [(incubating) vector API](https://openjdk.org/jeps/426). I probably won't implement to this because it's kind of beyond me plus I don't know
+  if it even applies.
 
 Apache Arrow is the natural choice for modeling in-memory columnar data in 2023 but I've already learned that in my
 other repository: <https://github.com/dgroomes/arrow-playground>. It has strong reference implementations for Java,
