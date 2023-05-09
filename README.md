@@ -1,8 +1,8 @@
-# java-in-memory-columnar-query-engine
+# java-columnar-query-engine
 
 NOT YET FULLY IMPLEMENTED
 
-A toy Java implementation of a query engine over in-memory, columnar, schema-ful data.
+A toy Java implementation of a query engine over columnar, schema-ful, in-memory data.
 
 
 ## Overview
