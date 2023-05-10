@@ -87,7 +87,7 @@ public class GeographiesLoader {
       throw new RuntimeException("There was an error while reading the ZIP data from the file.", e);
     }
 
-    log.info("Read {} ZIP codes from the local file and into Java objects.", formatInteger(zips.size()));
+    log.info("Read {} ZIP codes from the local file and deserialized into Java objects.", formatInteger(zips.size()));
 
     return new GeographyGraph(zips,
             zipToCity,

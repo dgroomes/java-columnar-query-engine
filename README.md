@@ -120,7 +120,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Define the state data (code and name).
   * DONE Incorporate the state data into the Arrow data model.
   * DONE Load the adjacencies data into the in-memory format.
-  * Implement a query across state adjacencies data.
+  * IN PROGRESS Implement a query across state adjacencies data.
 * [x] DONE Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
   supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
   words for this right now).

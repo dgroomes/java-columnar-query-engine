@@ -6,8 +6,8 @@ import dgroomes.geography.State;
 import dgroomes.geography.Zip;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
-import dgroomes.queryengine.Column;
 import dgroomes.queryengine.Association;
+import dgroomes.queryengine.Column;
 import dgroomes.queryengine.Table;
 import dgroomes.util.Util;
 import org.slf4j.Logger;
@@ -194,40 +194,40 @@ public class Runner {
         Column.AssociationColumn stateAdjacenciesColumn = new Column.AssociationColumn(statesTable, associations);
         statesTable.columns().add(stateAdjacenciesColumn);
       }
+    }
 
-      {
-        // Do a simple scan and determine the ZIP with the highest population.
-        int maxPopulation = -1;
-        int maxPopulationIndex = -1;
+    {
+      // Do a simple scan and determine the ZIP with the highest population.
+      int maxPopulation = -1;
+      int maxPopulationIndex = -1;
 
-        for (int i = 0; i < zipsTable.size(); i++) {
-          var pop = zipPopulationColumn.ints()[i];
-          if (pop > maxPopulation) {
-            maxPopulation = pop;
-            maxPopulationIndex = i;
-          }
+      for (int i = 0; i < zipsTable.size(); i++) {
+        var pop = zipPopulationColumn.ints()[i];
+        if (pop > maxPopulation) {
+          maxPopulation = pop;
+          maxPopulationIndex = i;
         }
-
-        if (maxPopulationIndex == -1) {
-          throw new IllegalStateException("The max population index was never set.");
-        }
-
-        int code = zipCodeColumn.ints()[maxPopulationIndex];
-        int cityIndex = ((Association.One) zipCityColumn.associations[maxPopulationIndex]).idx();
-        String city = cityNameColumn.strings()[cityIndex];
-        int stateIndex = ((Association.One) cityStateColumn.associations[cityIndex]).idx();
-        String stateCode = stateCodeColumn.strings()[stateIndex];
-        log.info("The ZIP code with the highest population is '{}' in {}, {} with a population of {}.", code, city, stateCode, Util.formatInteger(maxPopulation));
       }
 
-      {
-        // Query the data using the 'query engine'.
-        //
-        // Specifically, find all ZIP codes that have a population of 10,000 or more and are adjacent to a state with at
-        // least one city named "Springfield".
-
-        // TODO
+      if (maxPopulationIndex == -1) {
+        throw new IllegalStateException("The max population index was never set.");
       }
+
+      int code = zipCodeColumn.ints()[maxPopulationIndex];
+      int cityIndex = ((Association.One) zipCityColumn.associations[maxPopulationIndex]).idx();
+      String city = cityNameColumn.strings()[cityIndex];
+      int stateIndex = ((Association.One) cityStateColumn.associations[cityIndex]).idx();
+      String stateCode = stateCodeColumn.strings()[stateIndex];
+      log.info("The ZIP code with the highest population is '{}' in {}, {} with a population of {}.", code, city, stateCode, Util.formatInteger(maxPopulation));
+    }
+
+    {
+      // Query the data using the 'query engine'.
+      //
+      // Specifically, find all ZIP codes that have a population of 10,000 or more and are adjacent to a state with at
+      // least one city named "Springfield".
+
+      // TODO
     }
   }
 }
