@@ -132,19 +132,19 @@ General clean-ups, TODOs and things I wish to implement for this project:
     from a solid set of regression tests against an API that I'm also happy enough with (no need to change the API for now!)
     then the refactoring process will be safe/fun and then I come back and implement this task. I need to pay off this
     tech debt (it was a good debt).
-* [ ] Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
-* [ ] Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
+* [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
+* [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
-* [ ] Consider creating performance benchmarks. Consider using [Java MicroBenchmark Harness](https://github.com/openjdk/jmh)..
+* [ ] (stretch) Consider creating performance benchmarks. Consider using [Java MicroBenchmark Harness](https://github.com/openjdk/jmh)..
   Be careful with the benchmarks. Don't draw overly broad conclusions.
-* [ ] Consider splitting apart a query verifier from a query planner from a query executor (and maybe even a query
+* [ ] (stretch) Consider splitting apart a query verifier from a query planner from a query executor (and maybe even a query
   optimizer but I don't think I care to do that). I'm already finding that there is too much verification logic in the
   engine code which I'd rather be used just for execution.
 * [ ] Consider modelling a `Column` API so that the backing datastore can be swapped out. For example, I'm starting with
   simple arrays but I want to use compressed data structures using something like JavaFastPFOR and I might want to use the
   foreign memory API if I figure out that that's the best way to ensure that the data is laid out compactly (plus I want
   to learn the API).
-* [ ] Generic type parameters should work on the 'match' method. It takes a table and returns table of the exact same
+* [ ] SKIP (I agree with my comment in this item: I'm not sure I'm going to sub-type Table.) Generic type parameters should work on the 'match' method. It takes a table and returns table of the exact same
   type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
 * [ ] Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
   allows multiple criteria of multiple types (e.g. string and int).
@@ -155,9 +155,9 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Extract some common methods
   * DONE Be consistent about a 'result set' return type. Combine it with the final "prune" operation.
   * What else?
-* [ ] Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
-* [ ] Criteria/criterion language. Consider it. singular/plural. I don't care much.
-* [ ] Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.
+* [ ] (cosmetic) Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
+* [ ] (cosmetic) Criteria/criterion language. Consider it. singular/plural. I don't care much.
+* [ ] (stretch) Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.
 * [ ] Upgrade to Java 20. WARNING: I got some serious JVM failures when trying this (I guess this is liable to happen
   with preview features but I thought preview was more a statement of "this could chnage" not "this could fail").
   Specifically I got the following.
