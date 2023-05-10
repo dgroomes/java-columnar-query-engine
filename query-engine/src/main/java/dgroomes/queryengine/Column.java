@@ -1,7 +1,7 @@
 package dgroomes.queryengine;
 
 /**
- * This is a key type. The {@link Column} type represents a column of data in a table.
+ * This is a core type. The {@link Column} type represents a physical column of data in a table.
  * <p>
  * Note: for a toy query engine, we can get away with using a minimal set of column types. We cover three points on the
  * data spectrum: boolean (single bit), integer (32 bits), and string (variable length). Covering other types would be
@@ -20,11 +20,34 @@ sealed public interface Column {
     return new StringColumn(strings);
   }
 
-  record BooleanColumn(boolean[] bools) implements Column {}
+  /**
+   * The number of elements in the column.
+   */
+  int height();
 
-  record IntegerColumn(int[] ints) implements Column {}
+  record BooleanColumn(boolean[] bools) implements Column {
 
-  record StringColumn(String[] strings) implements Column {}
+    @Override
+    public int height() {
+      return bools.length;
+    }
+  }
+
+  record IntegerColumn(int[] ints) implements Column {
+
+    @Override
+    public int height() {
+      return ints.length;
+    }
+  }
+
+  record StringColumn(String[] strings) implements Column {
+
+    @Override
+    public int height() {
+      return strings.length;
+    }
+  }
 
   // Note: maybe modelling an association as a column of the entity is a bad idea. After all, the association is
   // usually goes both ways (bi-directional) in meaning. For example, a city is contained in a state and that state
@@ -33,6 +56,11 @@ sealed public interface Column {
 
     public final Table associatedEntity;
     public final Association[] associations;
+
+    @Override
+    public int height() {
+      return associations.length;
+    }
 
     // The dreaded bootstrapping problem with cyclic data structures. This has to be initialized later than the
     // constructor and this is why this class can't be a record.

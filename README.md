@@ -113,7 +113,7 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [ ] Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
+* [ ] (UPDATE 2023-05-10 work on this next) Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
   and do a query by something like "find states adjacent to states that have at least a ZIP code with a population of 1,000,000"
   (or a more illustrative query if you can think of one)
   * DONE Define the adjacencies data.
@@ -121,13 +121,13 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Incorporate the state data into the Arrow data model.
   * DONE Load the adjacencies data into the in-memory format.
   * Implement a query across state adjacencies data.
-* [ ] Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
+* [x] DONE Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
   supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
   words for this right now).
   * Ok I did the foundation of this work in other tasks, and the task-tracking is quite messy but I'm not going re-write
     history here. Let's move on. Now I need flesh out the query API.
   * DONE Support multiple criteria for strings.
-  * Support multiple criteria for ints. Note: if I take on this work now, I will implement it as another copy/paste
+  * DONE Support multiple criteria for ints. Note: if I take on this work now, I will implement it as another copy/paste
     change and the code will continue to suffer. If I consolidate the design and implementation first, while benefiting
     from a solid set of regression tests against an API that I'm also happy enough with (no need to change the API for now!)
     then the refactoring process will be safe/fun and then I come back and implement this task. I need to pay off this
@@ -146,7 +146,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   to learn the API).
 * [ ] SKIP (I agree with my comment in this item: I'm not sure I'm going to sub-type Table.) Generic type parameters should work on the 'match' method. It takes a table and returns table of the exact same
   type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
-* [ ] Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
+* [x] DONE Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
   allows multiple criteria of multiple types (e.g. string and int).
   * What happens to `OrdinalSingleFieldIntegerQuery`. Does this become a type that can be used as a component object in
     a composite query type (e.g. `MultiPointedCriteriaQuery`)?.
@@ -179,6 +179,8 @@ General clean-ups, TODOs and things I wish to implement for this project:
   and a "view/wrapper" class is a secondary concern for this project. I really want to focus on the query engine
   algorithm. Still, it's a valid nice-to-have. Or, seriously consider deleting the code and marking this wish list item
   as "won't do".
+* [ ] Fully implement boolean support. (remember we want to support 1-bit (boolean), 32-bit (int) and variable length
+  (string)).
 
 
 ## Finished Wish List Items

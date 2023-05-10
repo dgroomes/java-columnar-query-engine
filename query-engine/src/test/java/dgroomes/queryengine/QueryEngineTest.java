@@ -2,7 +2,6 @@ package dgroomes.queryengine;
 
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Pointer;
-import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Failure;
@@ -33,10 +32,10 @@ public class QueryEngineTest {
   void intQuery_oneColumnTable() {
     // Arrange
     var table = ofColumns(ofInts(-1, 0, 1, 2, 3));
-    var query = new Query.OrdinalSingleFieldIntegerQuery(0, i -> i > 0);
+    var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(0), i -> i > 0);
 
     // Act
-    QueryResult result = Executor.match(query, table);
+    QueryResult result = Executor.match(criterion, table);
 
     // Assert
     var columns = switch (result) {
@@ -78,10 +77,10 @@ public class QueryEngineTest {
 
             // City populations
             ofInts(425_336, 121_395, 86_697));
-    var query = new Query.OrdinalSingleFieldIntegerQuery(1, pop -> pop > 100_000 && pop < 150_000);
+    var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(1), pop -> pop > 100_000 && pop < 150_000);
 
     // Act
-    QueryResult result = Executor.match(query, table);
+    QueryResult result = Executor.match(criterion, table);
 
     // Assert
     var columns = switch (result) {
@@ -111,12 +110,12 @@ public class QueryEngineTest {
     // "d". This test case is interesting because we're exercising two criteria in a single query.
     var table = ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
 
-    var query = new Query.PointedStringCriteriaQuery(List.of(
+    var criteriaList = List.of(
             new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
-            new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("d") < 0)));
+            new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("d") < 0));
 
     // Act
-    QueryResult result = Executor.match(query, table);
+    QueryResult result = Executor.match(criteriaList, table);
 
     // Assert
     var columns = switch (result) {
@@ -155,10 +154,10 @@ public class QueryEngineTest {
 
     // Query for South Dakota cities
     {
-      var query = new Query.PointedStringCriteriaQuery(List.of(new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "South Dakota"::equals)));
+      var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "South Dakota"::equals);
 
       // Act
-      QueryResult result = Executor.match(query, cities);
+      QueryResult result = Executor.match(criterion, cities);
 
       // Assert
       var columns = switch (result) {
@@ -178,10 +177,10 @@ public class QueryEngineTest {
 
     // Query for Minnesota cities
     {
-      var query = new Query.PointedStringCriteriaQuery(List.of(new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "Minnesota"::equals)));
+      var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "Minnesota"::equals);
 
       // Act
-      QueryResult result = Executor.match(query, cities);
+      QueryResult result = Executor.match(criterion, cities);
 
       // Assert
       var columns = switch (result) {

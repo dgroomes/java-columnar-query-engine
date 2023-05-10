@@ -1,13 +1,15 @@
 package dgroomes.queryapi;
 
-sealed public interface Criteria permits Criteria.IntCriteria, Criteria.StringCriteria {
-  non-sealed interface IntCriteria extends Criteria {
-    boolean match(int integerUnderTest);
-  }
+import java.util.function.Predicate;
 
-  non-sealed interface StringCriteria extends Criteria {
-    boolean match(String stringUnderTest);
-  }
+/**
+ * A criteria describes a specification (like 'x > 0') for a specific (e.g. "pointed at") column value.
+ */
+sealed public interface Criteria permits Criteria.PointedIntCriteria, Criteria.PointedStringCriteria {
 
-  record PointedStringCriteria(Pointer pointer, StringCriteria criteria) {}
+  Pointer pointer();
+
+  record PointedStringCriteria(Pointer pointer, Predicate<String> stringPredicate) implements Criteria {}
+
+  record PointedIntCriteria(Pointer pointer, Predicate<Integer> integerPredicate) implements Criteria {}
 }
