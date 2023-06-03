@@ -6,17 +6,18 @@ import dgroomes.geography.State;
 import dgroomes.geography.Zip;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
+import dgroomes.queryapi.Criteria;
+import dgroomes.queryapi.Pointer;
 import dgroomes.queryengine.Association;
 import dgroomes.queryengine.Column;
+import dgroomes.queryengine.Executor;
 import dgroomes.queryengine.Table;
 import dgroomes.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,20 +46,33 @@ public class Runner {
         }
 
         // Load the ZIP data into the in-memory table/column format.
+
+        // The zips table is made of these columns:
+        //   0: ZIP code (integer)
+        //   1: population (integer)
+        //   2: city (association)
         Table zipsTable;
         Column.IntegerColumn zipCodeColumn;
         Column.IntegerColumn zipPopulationColumn;
         Column.AssociationColumn zipCityColumn;
 
+        // The cities table is made of these columns:
+        //   0: city name (string)
+        //   1: state (association)
+        //   2: ZIP codes (association)
         Table citiesTable;
         Column.StringColumn cityNameColumn;
-        Column.AssociationColumn cityZipColumn;
         Column.AssociationColumn cityStateColumn;
 
+        // The states table is made of these columns:
+        //   0: state code (string)
+        //   1: state name (string)
+        //   2: cities (association)
+        //   3: state adjacencies (association)
+        //   4: state adjacencies (reverse association) (this is a weird one)
         Table statesTable;
         Column.StringColumn stateCodeColumn;
         Column.StringColumn stateNameColumn;
-        Column.AssociationColumn stateCityColumn;
 
         {
             // Load the state data into the in-memory format
@@ -100,7 +114,6 @@ public class Runner {
                 int citiesSize = cities.size();
                 String[] cityNames = new String[citiesSize];
                 Association[] cityStateAssociations = new Association[citiesSize];
-                Association[] stateCitiesAssociations = new Association[citiesSize];
                 int i = 0;
                 for (City city : cities) {
                     cityToColumnIndex.put(city, i);
@@ -110,22 +123,12 @@ public class Runner {
 
                     // Associate the city to the state (easy because a city is contained in exactly one state)
                     cityStateAssociations[i] = new Association.One(stateColumnIndex);
-
-                    // Associate the state to the city (a bit more work because a state contains many cities)
-                    {
-                        Association existingAssociation = stateCitiesAssociations[stateColumnIndex];
-                        Association incrementedAssociation = switch (existingAssociation) {
-                            case null -> new Association.One(i);
-                            case Association a -> a.add(i);
-                        };
-                        stateCitiesAssociations[stateColumnIndex] = incrementedAssociation;
-                    }
                     i++;
                 }
 
                 cityNameColumn = new Column.StringColumn(cityNames);
-                cityStateColumn = new Column.AssociationColumn(statesTable, cityStateAssociations);
-                citiesTable = Table.ofColumns(cityNameColumn, cityStateColumn);
+                citiesTable = Table.ofColumns(cityNameColumn);
+                cityStateColumn = citiesTable.associateTo(statesTable, cityStateAssociations);
             }
 
 
@@ -135,7 +138,6 @@ public class Runner {
                 int[] codes = new int[zipValuesSize],
                         populations = new int[zipValuesSize];
                 Association[] zipCityAssociations = new Association[zipValuesSize];
-                Association[] cityZipAssociations = new Association[zipValuesSize];
 
                 int i = 0;
                 for (Zip zip : geo.zips()) {
@@ -146,24 +148,13 @@ public class Runner {
 
                     // Associate the ZIP to the city (easy because a ZIP is contained in exactly one city)
                     zipCityAssociations[i] = new Association.One(cityIndex);
-
-                    // Associate the city to the ZIP (a bit more work because a city can contain many ZIPs
-                    {
-                        Association existingAssociation = cityZipAssociations[cityIndex];
-                        Association incrementedAssociation = switch (existingAssociation) {
-                            case null -> new Association.One(i);
-                            case Association a -> a.add(i);
-                        };
-                        cityZipAssociations[cityIndex] = incrementedAssociation;
-                    }
                     i++;
                 }
 
                 zipCodeColumn = new Column.IntegerColumn(codes);
                 zipPopulationColumn = new Column.IntegerColumn(populations);
-                zipCityColumn = new Column.AssociationColumn(citiesTable, zipCityAssociations);
-                zipsTable = Table.ofColumns(zipCodeColumn, zipPopulationColumn, zipCityColumn);
-                citiesTable.columns().add(new Column.AssociationColumn(zipsTable, cityZipAssociations));
+                zipsTable = Table.ofColumns(zipCodeColumn, zipPopulationColumn);
+                zipCityColumn = zipsTable.associateTo(citiesTable, zipCityAssociations);
             }
 
             // Load the state adjacencies into the in-memory format.
@@ -175,6 +166,8 @@ public class Runner {
                 // look up of the State object from the state codes.
                 Map<String, State> stateCodeToState = geo.states().stream().collect(Collectors.toMap(State::code, Function.identity()));
                 Association[] associations = new Association[statesTable.size()];
+                // Initialize the associations array with empty associations.
+                Arrays.fill(associations, Association.NONE);
 
                 for (StateData.StateAdjacency stateAdjacency : StateData.STATE_ADJACENCIES) {
                     State state = stateCodeToState.get(stateAdjacency.state());
@@ -191,8 +184,7 @@ public class Runner {
                     associations[stateIndex] = incrementedAssociation;
                 }
 
-                Column.AssociationColumn stateAdjacenciesColumn = new Column.AssociationColumn(statesTable, associations);
-                statesTable.columns().add(stateAdjacenciesColumn);
+                statesTable.associateTo(statesTable, associations);
             }
         }
 
@@ -224,10 +216,36 @@ public class Runner {
         {
             // Query the data using the 'query engine'.
             //
-            // Specifically, find all ZIP codes that have a population of 10,000 or more and are adjacent to a state with at
-            // least one city named "Springfield".
+            // Specifically, find all ZIP codes that have a population around 10,000 are adjacent to a state with at
+            // least one city named "Plymouth".
 
-            // TODO
+            var populationCriteria = new Criteria.PointedIntCriteria(new Pointer.Ordinal(1), i -> i >= 10_000 && i < 10_100);
+
+            // This pointer is hard to read, so let's break it down in words.
+            //   1. The first pointer is on the ZIP table. It represents column '2' which is the association column to cities.
+            //   2. The second pointer is on the cities table. It represents column '1' which is the association column to states.
+            //   3. The third pointer is on the states table. It represents column '3' which is the association column to other states.
+            //   4. The fourth pointer is on the states table. It represents column '2' which is the association column to cities.
+            //   5. The fifth pointer is on the cities table. It represents column '0' which is the string column of city names.
+            var zipToCityToStateToAdjacentStateToCityToNamePointer = new Pointer.NestedPointer(2,
+                    new Pointer.NestedPointer(1,
+                            new Pointer.NestedPointer(3,
+                                    new Pointer.NestedPointer(2,
+                                            new Pointer.Ordinal(0)))));
+            var plymouthCriteria = new Criteria.PointedStringCriteria(zipToCityToStateToAdjacentStateToCityToNamePointer, "PLYMOUTH"::equals);
+
+            Executor.QueryResult queryResult = Executor.match(List.of(populationCriteria, plymouthCriteria), zipsTable);
+
+            switch (queryResult) {
+                case Executor.QueryResult.Success(var resultSet) -> {
+                    int matches = resultSet.size();
+                    var matchingZipCodes = (Column.IntegerColumn) resultSet.columns().get(0);
+                    var count = Util.formatInteger(matches);
+                    var zipsStr = Arrays.toString(matchingZipCodes.ints());
+                    log.info("{} ZIP codes have a population around 10,000 and are adjacent to a state that has a city named 'Plymouth': {}", count, zipsStr);
+                }
+                case Executor.QueryResult.Failure(var msg) -> log.error(msg);
+            }
         }
     }
 }

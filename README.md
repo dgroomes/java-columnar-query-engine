@@ -53,8 +53,8 @@ more tables/columns than that.
 
 When it comes to the workload of the queries, I want to execute a query like:
 
-> Find all ZIP codes that have a population of 10,000 or more and are in a state adjacent to a state with at least one
-> city named "Springfield".
+> Find all ZIP codes that have a population around 10,000 and are in a state adjacent to a state with at least one
+> city named "Plymouth".
 
 
 Or something cyclic (although contrived) like:
@@ -122,7 +122,9 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Define the state data (code and name).
   * DONE Incorporate the state data into the Arrow data model.
   * DONE Load the adjacencies data into the in-memory format.
-  * IN PROGRESS Implement a query across state adjacencies data.
+  * DONE Wire up the association columns correctly in `app/`
+  * DONE Implement a query across state adjacencies data.
+  * Implement the "North", "South", "North" query.
 * [x] DONE Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
   supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
   words for this right now).

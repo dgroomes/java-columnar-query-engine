@@ -41,7 +41,7 @@ public class Executor {
         Objects.requireNonNull(table, "The 'table' argument must not be null");
 
         // Our strategy is to start with the assumption that all entries in the entity match and prune down this list
-        // with each criteria.
+        // with each criterion.
         int[] rootIndexMatches = IntStream.range(0, table.size()).toArray();
 
         criteriaLoop:
@@ -49,12 +49,12 @@ public class Executor {
 
             // Algorithm working notes. We need to descend the table's fields and its associated tables following the pointer, all the while verifying that
             // the pointer is "legal" (meaning it follows columns that exist and all the columns are association columns except
-            // for the last one which is a string column). When we reach the end of the pointer, we can apply the string criteria.
-            // But then we have to follow back up the pointer and prune the table.
+            // for the last one which is a scalar column). When we reach the end of the pointer, we can apply the scalar criterion.
+            // After that, we have to follow back up the pointer and prune the table.
             var pointer = criterion.pointer();
 
             // I need to group things together during the query execution, like grouping columns with their owning entities.
-            // This is some unfortunate glue code. consider refactoring.
+            // This is some unfortunate glue code. Consider refactoring.
             //
             // We group an entity and an associated column together. Because an associated column points to another entity,
             // we call this a "directional context". Hopefully this helps me understand what I'm doing.
@@ -68,7 +68,7 @@ public class Executor {
             int[] indexMatches;
             while (true) {
                 if (currentPointer instanceof Pointer.Ordinal(int ordinal)) {
-                    // We've bottomed out. Match the data on the criteria.
+                    // We've bottomed out. Match the data on the scalar (integer, string, boolean) criterion.
                     if (currentEntity.columns().size() < ordinal) {
                         var msg = "The query ordinal '%d' is out of bounds for the table with %d columns".formatted(ordinal, currentEntity.columns().size());
                         return new QueryResult.Failure(msg);
@@ -101,7 +101,7 @@ public class Executor {
                     break;
                 } else if (currentPointer instanceof Pointer.NestedPointer(int ordinal, Pointer nextPointer)) {
                     var associationColumn = (Column.AssociationColumn) currentEntity.columns().get(ordinal);
-                    groupings.add(new DirectionalContextGrouping(currentEntity, associationColumn));
+                    groupings.push(new DirectionalContextGrouping(currentEntity, associationColumn));
                     currentPointer = nextPointer;
                     currentEntity = associationColumn.associatedEntity;
                 } else {
@@ -124,10 +124,8 @@ public class Executor {
                     continue criteriaLoop;
                 }
 
-                DirectionalContextGrouping group = groupings.pop();
-                // Is this a problem that it's never used? Do I need 'currentEntity'?
-                //            currentEntity = group.entity();
-                Column.AssociationColumn associationColumn = group.associationColumn();
+                DirectionalContextGrouping grouping = groupings.pop();
+                Column.AssociationColumn associationColumn = grouping.associationColumn();
                 Association[] reverseAssociations = associationColumn.reverseAssociatedColumn().associations;
                 var nextMatches = new HashSet<Integer>();
                 for (int i : indexMatches) {

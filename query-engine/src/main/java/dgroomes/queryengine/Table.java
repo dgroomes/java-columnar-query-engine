@@ -45,8 +45,9 @@ public record Table(List<Column> columns) {
      *
      * @param associatedEntity the entity type to associate to (Y)
      * @param associations     the associations from this entity (X) to the associated entity (Y)
+     * @return the association column
      */
-    void associateTo(Table associatedEntity, Association... associations) {
+    public Column.AssociationColumn associateTo(Table associatedEntity, Association... associations) {
         var associationColumn = new Column.AssociationColumn(associatedEntity, associations);
         // Note: yes this is nasty; we are using a mutable data structure. I love using records, but I often wind up with
         // a need to mutate it and struggle.
@@ -58,15 +59,21 @@ public record Table(List<Column> columns) {
         Column.AssociationColumn reverseAssociationColumn;
         {
             var yIndexToXAssociations = new HashMap<Integer, List<Integer>>();
+            // Initialize the map with empty lists.
+            for (int yIndex = 0; yIndex < associatedEntity.size(); yIndex++) {
+                yIndexToXAssociations.put(yIndex, new ArrayList<>());
+            }
+
             for (int xIndex = 0; xIndex < associations.length; xIndex++) {
                 int[] yIndices = switch (associations[xIndex]) {
                     case Association.One(var idx) -> new int[]{idx};
                     case Association.Many(var indices) -> indices;
                     case Association.None ignored -> new int[]{};
+                    case null -> throw new IllegalStateException("Found a null association");
                 };
 
                 for (int yIndex : yIndices) {
-                    var yToX = yIndexToXAssociations.computeIfAbsent(yIndex, ignored -> new ArrayList<>());
+                    var yToX = yIndexToXAssociations.get(yIndex);
                     yToX.add(xIndex);
                 }
             }
@@ -85,6 +92,7 @@ public record Table(List<Column> columns) {
         }
 
         associatedEntity.columns().add(reverseAssociationColumn);
+        return associationColumn;
     }
 
     public int size() {
