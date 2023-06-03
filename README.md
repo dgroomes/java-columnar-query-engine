@@ -7,22 +7,22 @@ A toy Java implementation of a query engine over columnar, schema-ful, in-memory
 
 ## Overview
 
-I want to model and search over a cyclic structured set of data. Think "car models" made by "car makers" influenced by
-the design and success of other car models and car makers.
+I want to search over a cyclic structured set of data. Think "cities" belonging to "states" which are adjacent to other
+states which contain cities.
 
 **NOTE**: This project was developed on macOS. It is for my own personal use.
 
 I want all the following characteristics:
 
 * Columnar
-  * The data is physically laid out as columns (Java arrays).
+  * The data is physically laid out as columns (e.g. Java arrays).
 * Schema-ful
-  * The data adheres to a schema. Look back to my car models and car makers comment earlier. In other words, I don't
+  * The data adheres to a schema. Look back to my cities and states comment earlier. In other words, I don't
   care about implementing a query engine over a traditional "graph database" where the relationship of edges and vertices
   is unconstrained, like in Neo4J. The effect of having schema-ful data is that the data can be described as columns,
   and columnar data lays out physically as arrays. I believe what I want is something called an ["object database"](https://en.wikipedia.org/wiki/Object_database). This type of database is somewhat obscure but actually there
-  is one modern one called [Realm](https://en.wikipedia.org/wiki/Realm_(database)) which is popular on mobile. Also I've
-  been inspired by [Kuzu](https://github.com/kuzudb/kuzu) which is a property graph database but it has schemas (which I
+  is one modern one called [Realm](https://en.wikipedia.org/wiki/Realm_(database)) which is popular on mobile. Also, I've
+  been inspired by [Kuzu](https://github.com/kuzudb/kuzu) which is a property graph database, but it has schemas (which I
   like) so doesn't that make it a traditional object database? I tried to build Kuzu from source but had issues (it's
   extremely new; so that's ok) so maybe I'll try Realm (although it's also C++ so I'm scared).
 * In-memory
@@ -33,28 +33,28 @@ I want all the following characteristics:
   * I want to at least vaguely think about vectorized CPU computation in light of Java's [(incubating) vector API](https://openjdk.org/jeps/426). I probably won't implement to this because it's kind of beyond me plus I don't know
   if it even applies.
 
-Apache Arrow is the natural choice for modeling in-memory columnar data in 2023 but I've already learned that in my
-other repository: <https://github.com/dgroomes/arrow-playground>. It has strong reference implementations for Java,
+Apache Arrow is the natural choice for modeling in-memory columnar data in 2023, but I've already learned that API
+in my other repository: <https://github.com/dgroomes/arrow-playground>. It has a strong reference implementation for Java,
 which is my go-to language. The Java Arrow implementation also offers table-like data modeling which goes a long way to
-making the developer experience pretty good for modeling the aforementioned "car makers" and "car models" data. But the
-convenience stops there. The Java Arrow implementation does not offer entity-to-entity relationships and it offers only
-very basic implementations of algorithms: specifically binary search and sorting. And I find it a bit cumbersome (but I
+making the developer experience pretty good for modeling the aforementioned "cities and states" data. But the convenience
+stops there. The Java Arrow implementation does not offer entity-to-entity relationships and it offers only very basic
+implementations of algorithms: specifically binary search and sorting. And I find it a bit cumbersome (but I
 still appreciate it; thank you open source developers). I want an actual basic query engine. So, this repo is me doing
 that (fingers crossed).
 
 
 ## Design
 
-The domain data of this project is not the aforementioned "car makers" and "car models" data but instead it is ZIP code
-data. This data is small (3MB) but it can be multiplied into "parallel universes" if needed. It's relatable. It's real.
+The domain data of this project is ZIP code data, contained in cities, contained in states and with state adjacencies.
+This data is small (3MB) but it can be multiplied into "parallel universes" if needed. It's relatable. It's real.
 And the surface area of the schema is about as small as possible: ZIP codes, population, containing city name, containing
-state name and state code, and then state-to-state adjacencies. Nice. I don't want to be bogged down with more tables/columns
-than that.
+state name and state code, and then state-to-state adjacency relationships. Nice. I don't want to be bogged down with
+more tables/columns than that.
 
 When it comes to the workload of the queries, I want to execute a query like:
 
-> Find all ZIP codes that have a population of 10,000 or more and are adjacent to a state with at least one city named
-> "Springfield".
+> Find all ZIP codes that have a population of 10,000 or more and are in a state adjacent to a state with at least one
+> city named "Springfield".
 
 
 Or something cyclic (although contrived) like:
@@ -92,6 +92,8 @@ but no I don't want to be constrained by ownership/borrowing. I'm in "query engi
 
 [DuckDB](https://github.com/duckdb/duckdb) is another OLAP database (columnar) and it is well-loved by developers and offers lots of features. I bet I
 could learn by building it from source and poking around. Although it's C++ so that's another learning curve for me.
+
+[tablesaw](https://github.com/jtablesaw/tablesaw) is a Java-based data frame implementation.
 
 
 ## Instructions
