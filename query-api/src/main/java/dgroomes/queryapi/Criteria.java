@@ -7,9 +7,9 @@ import java.util.function.Predicate;
  */
 sealed public interface Criteria permits Criteria.PointedIntCriteria, Criteria.PointedStringCriteria {
 
-  Pointer pointer();
+    Pointer pointer();
 
-  record PointedStringCriteria(Pointer pointer, Predicate<String> stringPredicate) implements Criteria {}
+    record PointedStringCriteria(Pointer pointer, Predicate<String> stringPredicate) implements Criteria {}
 
-  record PointedIntCriteria(Pointer pointer, Predicate<Integer> integerPredicate) implements Criteria {}
+    record PointedIntCriteria(Pointer pointer, Predicate<Integer> integerPredicate) implements Criteria {}
 }

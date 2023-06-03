@@ -1,3 +1,3 @@
 module dgroomes.queryapi {
-  exports dgroomes.queryapi;
+    exports dgroomes.queryapi;
 }

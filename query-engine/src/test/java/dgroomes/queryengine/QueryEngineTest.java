@@ -24,178 +24,178 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class QueryEngineTest {
 
-  /**
-   * [Happy Path]
-   * Ordinal integer query over a single-column table.
-   */
-  @Test
-  void intQuery_oneColumnTable() {
-    // Arrange
-    var table = ofColumns(ofInts(-1, 0, 1, 2, 3));
-    var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(0), i -> i > 0);
+    /**
+     * [Happy Path]
+     * Ordinal integer query over a single-column table.
+     */
+    @Test
+    void intQuery_oneColumnTable() {
+        // Arrange
+        var table = ofColumns(ofInts(-1, 0, 1, 2, 3));
+        var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(0), i -> i > 0);
 
-    // Act
-    QueryResult result = Executor.match(criterion, table);
+        // Act
+        QueryResult result = Executor.match(criterion, table);
 
-    // Assert
-    var columns = switch (result) {
-      // By using the 'throw' keyword here, we are being good partners with the compiler because the compiler lets us
-      // narrow the type of `result` to `Success` and better yet, we can even extract a reference to the underlying list
-      // of columns because of the "record pattern matching" language features.
-      //
-      // If, by contrast, we used AssertJ to verify the type like this:
-      //
-      //     assertThat(result).isInstanceOf(Success.class);
-      //
-      // We would get a semantic assertion, but the compiler doesn't care. We would have to cast 'result' to a 'Success'.
-      // That's not so bad, but it is redundant. This style isn't necessarily better, but I want to keep exercising
-      // my Java language skills.
-      case Failure(var msg) -> throw failed(msg);
-      case Success(Table(List<Column> c)) -> c;
-    };
+        // Assert
+        var columns = switch (result) {
+            // By using the 'throw' keyword here, we are being good partners with the compiler because the compiler lets us
+            // narrow the type of `result` to `Success` and better yet, we can even extract a reference to the underlying list
+            // of columns because of the "record pattern matching" language features.
+            //
+            // If, by contrast, we used AssertJ to verify the type like this:
+            //
+            //     assertThat(result).isInstanceOf(Success.class);
+            //
+            // We would get a semantic assertion, but the compiler doesn't care. We would have to cast 'result' to a 'Success'.
+            // That's not so bad, but it is redundant. This style isn't necessarily better, but I want to keep exercising
+            // my Java language skills.
+            case Failure(var msg) -> throw failed(msg);
+            case Success(Table(List<Column> c)) -> c;
+        };
 
-    assertThat(columns).hasSize(1);
-    Column firstColumn = columns.get(0);
+        assertThat(columns).hasSize(1);
+        Column firstColumn = columns.get(0);
 
-    if (!(firstColumn instanceof IntegerColumn(var ints))) {
-      throw failed("Expected an IntegerColumn but got a " + firstColumn.getClass().getSimpleName());
+        if (!(firstColumn instanceof IntegerColumn(var ints))) {
+            throw failed("Expected an IntegerColumn but got a " + firstColumn.getClass().getSimpleName());
+        }
+
+        assertThat(ints).containsExactly(1, 2, 3);
     }
 
-    assertThat(ints).containsExactly(1, 2, 3);
-  }
+    /**
+     * [Happy Path]
+     * Ordinal integer query over a multi-column table.
+     */
+    @Test
+    void intQuery_twoColumnTable() {
+        // Arrange
+        var table = ofColumns(
+                // City names
+                Column.ofStrings("Minneapolis", "Rochester", "Duluth"),
 
-  /**
-   * [Happy Path]
-   * Ordinal integer query over a multi-column table.
-   */
-  @Test
-  void intQuery_twoColumnTable() {
-    // Arrange
-    var table = ofColumns(
-            // City names
-            Column.ofStrings("Minneapolis", "Rochester", "Duluth"),
+                // City populations
+                ofInts(425_336, 121_395, 86_697));
+        var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(1), pop -> pop > 100_000 && pop < 150_000);
 
-            // City populations
-            ofInts(425_336, 121_395, 86_697));
-    var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(1), pop -> pop > 100_000 && pop < 150_000);
+        // Act
+        QueryResult result = Executor.match(criterion, table);
 
-    // Act
-    QueryResult result = Executor.match(criterion, table);
+        // Assert
+        var columns = switch (result) {
+            case Failure(var msg) -> throw failed(msg);
+            case Success(Table(List<Column> c)) -> c;
+        };
 
-    // Assert
-    var columns = switch (result) {
-      case Failure(var msg) -> throw failed(msg);
-      case Success(Table(List<Column> c)) -> c;
-    };
+        assertThat(columns).hasSize(2);
+        Column cityColumn = columns.get(0);
 
-    assertThat(columns).hasSize(2);
-    Column cityColumn = columns.get(0);
+        if (!(cityColumn instanceof Column.StringColumn(var cities))) {
+            throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
+        }
 
-    if (!(cityColumn instanceof Column.StringColumn(var cities))) {
-      throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
+        assertThat(cities).containsExactly("Rochester");
     }
 
-    assertThat(cities).containsExactly("Rochester");
-  }
+    /**
+     * [Happy Path]
+     * Multi-criteria query.
+     */
+    @Test
+    void multiCriteria() {
+        // Arrange
+        //
+        // We're going to search over a simple collection of strings to find those that are greater than "a" but less than
+        // "d". This test case is interesting because we're exercising two criteria in a single query.
+        var table = ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
 
-  /**
-   * [Happy Path]
-   * Multi-criteria query.
-   */
-  @Test
-  void multiCriteria() {
-    // Arrange
-    //
-    // We're going to search over a simple collection of strings to find those that are greater than "a" but less than
-    // "d". This test case is interesting because we're exercising two criteria in a single query.
-    var table = ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
+        var criteriaList = List.of(
+                new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
+                new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("d") < 0));
 
-    var criteriaList = List.of(
-            new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
-            new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("d") < 0));
+        // Act
+        QueryResult result = Executor.match(criteriaList, table);
 
-    // Act
-    QueryResult result = Executor.match(criteriaList, table);
+        // Assert
+        var columns = switch (result) {
+            case Failure(var msg) -> throw failed(msg);
+            case Success(Table(List<Column> c)) -> c;
+        };
 
-    // Assert
-    var columns = switch (result) {
-      case Failure(var msg) -> throw failed(msg);
-      case Success(Table(List<Column> c)) -> c;
-    };
+        assertThat(columns).hasSize(1);
+        Column firstColumn = columns.get(0);
 
-    assertThat(columns).hasSize(1);
-    Column firstColumn = columns.get(0);
+        if (!(firstColumn instanceof Column.StringColumn(var strings))) {
+            throw failed("Expected a StringColumn but got a " + firstColumn.getClass().getSimpleName());
+        }
 
-    if (!(firstColumn instanceof Column.StringColumn(var strings))) {
-      throw failed("Expected a StringColumn but got a " + firstColumn.getClass().getSimpleName());
+        assertThat(strings).containsExactly("b", "c", "c");
     }
 
-    assertThat(strings).containsExactly("b", "c", "c");
-  }
+    /**
+     * [Happy Path]
+     * <p>
+     * Associations. Given a type X that is associated with another type Y, query for entities of X on a property of Y.
+     * Specifically, let's model cities, states and the "contained in" association from city to state.
+     */
+    @Test
+    void queryOnAssociationProperty() {
+        var cities = ofColumns(Column.ofStrings("Minneapolis", "Pierre", "Duluth"));
+        var states = ofColumns(Column.ofStrings("Minnesota", "South Dakota"));
+        // The "contained in" association from city to state. It is based on the index position of the cities and states
+        // expressed above.
+        cities.associateTo(states,
+                Association.toOne(0) /* Minneapolis is contained in Minnesota */,
+                Association.toOne(1) /* Pierre is contained in South Dakota */,
+                Association.toOne(0) /* Duluth is contained in Minnesota */);
+        // Note: '1' is the ordinal position of the "contained in" association column to the state collection.
+        // '0' is the ordinal position of the state name column in the state collection.
 
-  /**
-   * [Happy Path]
-   * <p>
-   * Associations. Given a type X that is associated with another type Y, query for entities of X on a property of Y.
-   * Specifically, let's model cities, states and the "contained in" association from city to state.
-   */
-  @Test
-  void queryOnAssociationProperty() {
-    var cities = ofColumns(Column.ofStrings("Minneapolis", "Pierre", "Duluth"));
-    var states = ofColumns(Column.ofStrings("Minnesota", "South Dakota"));
-    // The "contained in" association from city to state. It is based on the index position of the cities and states
-    // expressed above.
-    cities.associateTo(states,
-            Association.toOne(0) /* Minneapolis is contained in Minnesota */,
-            Association.toOne(1) /* Pierre is contained in South Dakota */,
-            Association.toOne(0) /* Duluth is contained in Minnesota */);
-    // Note: '1' is the ordinal position of the "contained in" association column to the state collection.
-    // '0' is the ordinal position of the state name column in the state collection.
+        // Query for South Dakota cities
+        {
+            var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "South Dakota"::equals);
 
-    // Query for South Dakota cities
-    {
-      var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "South Dakota"::equals);
+            // Act
+            QueryResult result = Executor.match(criterion, cities);
 
-      // Act
-      QueryResult result = Executor.match(criterion, cities);
+            // Assert
+            var columns = switch (result) {
+                case Failure(var msg) -> throw failed(msg);
+                case Success(Table(List<Column> c)) -> c;
+            };
 
-      // Assert
-      var columns = switch (result) {
-        case Failure(var msg) -> throw failed(msg);
-        case Success(Table(List<Column> c)) -> c;
-      };
+            assertThat(columns).hasSize(2);
+            Column cityColumn = columns.get(0);
 
-      assertThat(columns).hasSize(2);
-      Column cityColumn = columns.get(0);
+            if (!(cityColumn instanceof Column.StringColumn(var cityMatches))) {
+                throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
+            }
 
-      if (!(cityColumn instanceof Column.StringColumn(var cityMatches))) {
-        throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
-      }
+            assertThat(cityMatches).containsExactly("Pierre");
+        }
 
-      assertThat(cityMatches).containsExactly("Pierre");
+        // Query for Minnesota cities
+        {
+            var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "Minnesota"::equals);
+
+            // Act
+            QueryResult result = Executor.match(criterion, cities);
+
+            // Assert
+            var columns = switch (result) {
+                case Failure(var msg) -> throw failed(msg);
+                case Success(Table(List<Column> c)) -> c;
+            };
+
+            assertThat(columns).hasSize(2);
+            Column cityColumn = columns.get(0);
+
+            if (!(cityColumn instanceof Column.StringColumn(var cityMatches))) {
+                throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
+            }
+
+            assertThat(cityMatches).containsExactly("Minneapolis", "Duluth");
+        }
     }
-
-    // Query for Minnesota cities
-    {
-      var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "Minnesota"::equals);
-
-      // Act
-      QueryResult result = Executor.match(criterion, cities);
-
-      // Assert
-      var columns = switch (result) {
-        case Failure(var msg) -> throw failed(msg);
-        case Success(Table(List<Column> c)) -> c;
-      };
-
-      assertThat(columns).hasSize(2);
-      Column cityColumn = columns.get(0);
-
-      if (!(cityColumn instanceof Column.StringColumn(var cityMatches))) {
-        throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
-      }
-
-      assertThat(cityMatches).containsExactly("Minneapolis", "Duluth");
-    }
-  }
 }

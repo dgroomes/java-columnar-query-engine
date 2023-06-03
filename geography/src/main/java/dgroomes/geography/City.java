@@ -5,7 +5,7 @@ package dgroomes.geography;
  * same problem because ZIP codes are unique and state names/code are unique.
  */
 public record City(String name, String stateCode) {
-  public State state(GeographyGraph geographyGraph) {
-    return geographyGraph.cityToState().get(this);
-  }
+    public State state(GeographyGraph geographyGraph) {
+        return geographyGraph.cityToState().get(this);
+    }
 }

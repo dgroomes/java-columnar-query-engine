@@ -4,7 +4,8 @@ import java.util.List;
 
 /**
  * UPDATE: This abstraction isn't offering much right now when compared to {@link Criteria}. I'm going to stop using
- * this for now. Maybe I'll re-tool {@link Query} to represent an actual query plan/statistics/heuristics?
+ * this for now. Maybe I'll re-tool {@link Query} to represent an actual query plan/statistics/heuristics?\
+ * <p>
  * A toy query API. Instances of {@link Query} expresses a query over some structure of data. This is a
  * *definitional* concept. It does not couple to any particular physical data source.
  * <p>
@@ -13,5 +14,5 @@ import java.util.List;
  */
 @Deprecated
 public sealed interface Query {
-  record CriteriaQuery(List<Criteria> criteria) implements Query {}
+    record CriteriaQuery(List<Criteria> criteria) implements Query {}
 }
