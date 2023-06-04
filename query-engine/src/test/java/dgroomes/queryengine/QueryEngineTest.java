@@ -6,6 +6,7 @@ import dgroomes.queryengine.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Failure;
 import dgroomes.queryengine.Executor.QueryResult.Success;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -100,7 +101,7 @@ public class QueryEngineTest {
      * Multi-criteria query.
      */
     @Test
-    void multiCriteria() {
+    void multiCriteria_rootEntity() {
         // Arrange
         //
         // We're going to search over a simple collection of strings to find those that are greater than "a" but less than
@@ -192,5 +193,117 @@ public class QueryEngineTest {
 
             assertThat(cityMatches).containsExactly("Minneapolis", "Duluth");
         }
+    }
+
+    @Disabled("This functionality is not yet implemented. The query yields a false positive on 'maple trees'.")
+    @Test
+    void multiCriteria_includingIntermediateEntity() {
+        // Consider a botanical garden. It is full of many sections of plants. There might be a section of cedar trees,
+        // a section of maple trees, a section of rose bushes, a section of tulips, etc. There are exactly three
+        // botanical categories of plants: trees, shrubs and ferns. Each section is one of those categories.
+        //
+        // We want to plan a trip to the botanical garden for a friend who has particular taste, and they enjoy variety
+        // and efficiency. The friend has all these requirements:
+        //
+        //   * Variety: visit a section for each of the categories. We need to visit a tree a shrub and a fern.
+        //   * Efficiency: subsequent sections must be directly adjacent to previous sections. We don't want to waste
+        //     time and effort travelling extra sections.
+        //   * Particular: they want to visit trees first because they are strong, then shrubs, then ferns because they
+        //     are majestic.
+        //
+        // For example, consider that there are the following sections:
+        //
+        //   Section      | Category
+        //   -------------+---------
+        //   lilacs       | shrubs
+        //   cedar trees  | trees
+        //   maple trees  | trees
+        //   rose bushes  | shrubs
+        //   Boston ferns | ferns
+        //
+        //
+        // And the sections are laid out in the garden like this:
+        //
+        // ┌─────────────┬─────────────┬─────────────┐
+        // │ maple trees │    lilacs   │             │
+        // │      0      │      1      │      2      │
+        // ├─────────────┼─────────────┼─────────────┤
+        // │             │             │             │
+        // │      3      │      4      │      5      │
+        // ├─────────────┼─────────────┼─────────────┤
+        // │ Boston fern │  rose bush  │ cedar trees │
+        // │      6      │      7      │      8      │
+        // └─────────────┴─────────────┴─────────────┘
+        //
+        // The only path through the garden that satisfies the friend's requirements is to visit the cedar trees, then
+        // the rose bush and then the Boston ferns.
+
+        var sections = ofColumns(
+                Column.ofStrings(
+                        "maple trees", "lilacs", "",
+                        "", "", "",
+                        "Boston ferns", "rose bush", "cedar trees"),
+                Column.ofStrings(
+                        "trees", "shrubs", "",
+                        "", "", "",
+                        "ferns", "shrubs", "trees"));
+
+        sections.associateTo(sections,
+            // The maple trees (0) are adjacent to the lilacs (1) and blank (3)
+            Association.toMany(1, 3),
+
+            // The lilacs (1) are adjacent to the maple trees (0) and blank (2) and blank (4)
+            Association.toMany(0, 2, 4),
+
+            // blank (2) is adjacent to the lilacs (1) and blank (5)
+            Association.toMany(1, 5),
+
+            // blank (3) is adjacent to the maple trees (0), blank (4) and the Boston ferns (6)
+            Association.toMany(0, 4, 6),
+
+            // blank (4) is adjacent to the lilacs (1), blank (3), blank (5) and the rose bush (7)
+            Association.toMany(1, 3, 5, 7),
+
+            // blank (5) is adjacent to blank (2), blank (4) and the cedar trees (8)
+            Association.toMany(2, 4, 8),
+
+            // The Boston ferns (6) are adjacent to blank (3) and the rose bush (7)
+            Association.toMany(3, 7),
+
+            // The rose bush (7) is adjacent to blank (4), the Boston ferns (6) and the cedar trees (8)
+            Association.toMany(4, 6, 8),
+
+            // The cedar trees (8) are adjacent to blank (5) and the rose bush (7)
+            Association.toMany(5, 7));
+
+        // Let's write the query. NOTE: it's not possible to express the "shrubs" adjacent to "ferns" in the API now. I
+        // need to figure out how to implement that.
+
+        var firstEntityTreesCriterion = new Criteria.PointedStringCriteria(new Pointer.Ordinal(1), "trees"::equals);
+        var secondEntityShrubsCriterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(2, new Pointer.Ordinal(1)), "shrubs"::equals);
+        var thirdEntityFernsCriterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(2, new Pointer.NestedPointer(2, new Pointer.Ordinal(1))), "ferns"::equals);
+        var criteria = List.of(firstEntityTreesCriterion, secondEntityShrubsCriterion, thirdEntityFernsCriterion);
+
+        // Act
+        QueryResult result = Executor.match(criteria, sections);
+
+        // Assert
+        var columns = switch (result) {
+            case Failure(var msg) -> throw failed(msg);
+            case Success(Table(List<Column> c)) -> c;
+        };
+
+        // The first column is the name (e.g. "cedar trees")
+        // The second column is the category (e.g. "trees")
+        // The third column is the association column to itself
+        // The fourth column is the reverse association column
+        assertThat(columns).hasSize(4);
+        Column nameColumn = columns.get(0);
+
+        if (!(nameColumn instanceof Column.StringColumn(var nameMatches))) {
+            throw failed("Expected a StringColumn but got a " + nameColumn.getClass().getSimpleName());
+        }
+
+        assertThat(nameMatches).containsExactly("cedar trees");
     }
 }

@@ -115,9 +115,12 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [ ] "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
+* [ ] IN PROGRESS "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
   and the leaves but on the intermediate entities in between. For example, the "North/South/North" query example can't
-  be expressed correctly because the "South/North" part can't be expressed. 
+  be expressed correctly because the "South/North" part can't be expressed.
+  * DONE Write a test case.
+  * Express "criteria chains" in the API
+  * Implement in the query engine
 * [x] DONE (UPDATE 2023-05-10 work on this next) Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
   and do a query across associations
   * DONE Define the adjacencies data.
