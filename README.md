@@ -115,16 +115,17 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [ ] (UPDATE 2023-05-10 work on this next) Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
-  and do a query by something like "find states adjacent to states that have at least a ZIP code with a population of 1,000,000"
-  (or a more illustrative query if you can think of one)
+* [ ] "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
+  and the leaves but on the intermediate entities in between. For example, the "North/South/North" query example can't
+  be expressed correctly because the "South/North" part can't be expressed. 
+* [x] DONE (UPDATE 2023-05-10 work on this next) Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
+  and do a query across associations
   * DONE Define the adjacencies data.
   * DONE Define the state data (code and name).
   * DONE Incorporate the state data into the Arrow data model.
   * DONE Load the adjacencies data into the in-memory format.
   * DONE Wire up the association columns correctly in `app/`
   * DONE Implement a query across state adjacencies data.
-  * Implement the "North", "South", "North" query.
 * [x] DONE Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
   supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
   words for this right now).
