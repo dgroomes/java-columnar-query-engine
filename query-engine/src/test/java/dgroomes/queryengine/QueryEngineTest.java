@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class QueryEngineTest {
 
     /**
-     * [Happy Path]
      * Ordinal integer query over a single-column table.
      */
     @Test
@@ -65,7 +64,6 @@ public class QueryEngineTest {
     }
 
     /**
-     * [Happy Path]
      * Ordinal integer query over a multi-column table.
      */
     @Test
@@ -99,7 +97,6 @@ public class QueryEngineTest {
     }
 
     /**
-     * [Happy Path]
      * Multi-criteria query.
      */
     @Test
@@ -134,8 +131,6 @@ public class QueryEngineTest {
     }
 
     /**
-     * [Happy Path]
-     * <p>
      * Associations. Given a type X that is associated with another type Y, query for entities of X on a property of Y.
      * Specifically, let's model cities, states and the "contained in" association from city to state.
      */
