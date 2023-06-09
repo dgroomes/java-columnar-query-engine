@@ -234,7 +234,8 @@ public class Runner {
                                             new Pointer.Ordinal(0)))));
             var plymouthCriteria = new Criteria.PointedStringCriteria(zipToCityToStateToAdjacentStateToCityToNamePointer, "PLYMOUTH"::equals);
 
-            Executor.QueryResult queryResult = Executor.match(List.of(populationCriteria, plymouthCriteria), zipsTable);
+            Executor executor = new Executor();
+            Executor.QueryResult queryResult = executor.match(List.of(populationCriteria, plymouthCriteria), zipsTable);
 
             switch (queryResult) {
                 case Executor.QueryResult.Success(var resultSet) -> {

@@ -115,11 +115,24 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [ ] IN PROGRESS "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
+* [x] DONE (This worked very nicely) Query verifier. Read the definitional "criteria + pointer" object and verify that it's legal for the table, and
+  return an "attached" or "live" object that can be used for the query execution.
+* [ ] "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
   and the leaves but on the intermediate entities in between. For example, the "North/South/North" query example can't
   be expressed correctly because the "South/North" part can't be expressed.
   * DONE Write a test case.
   * Express "criteria chains" in the API
+    * Update: I found that I think I want a `ChainMultiCriteria`. An effect of this is that it obsoletes the need for a
+      list of criteria. Update: I think it's natural to express this as `And`-named thing (I guess?) And also (stream-of-consciousness)
+      I don't need to support "disparate ANDs" and I might need to decouple `Pointer` a bit from `Criteria` (although
+      that worked nicely until now). The type of query I want to support is all ANDed together (literally no ORs). And
+      querying the root is not special case compared to querying from sub-entities (I need to make one big iterative for
+      loop and get rid of the "root index matches" (it's going to be a moving root depending on context)).
+    * Update: this isn't working well. I think it's time to create a simple query verifier which reads the definitional
+      "criteria + pointer" object (the query) and then turns that into a stateful/attached "query state" object that 
+      represents the graph and the query results (like intermediate pruning). This change can be done without changing
+      the API. So it's best to do this work, then come back to the "Criteria on intermediate nodes" work otherwise it's
+      too much at once.
   * Implement in the query engine
 * [x] DONE (UPDATE 2023-05-10 work on this next) Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
   and do a query across associations
@@ -145,7 +158,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
 * [ ] (stretch) Consider creating performance benchmarks. Consider using [Java MicroBenchmark Harness](https://github.com/openjdk/jmh)..
   Be careful with the benchmarks. Don't draw overly broad conclusions.
-* [ ] (stretch) Consider splitting apart a query verifier from a query planner from a query executor (and maybe even a query
+* [ ] (stretch) Consider splitting apart a query verifier (UPDATE: the verifier is implemented) from a query planner from a query executor (and maybe even a query
   optimizer but I don't think I care to do that). I'm already finding that there is too much verification logic in the
   engine code which I'd rather be used just for execution.
 * [ ] Consider modelling a `Column` API so that the backing datastore can be swapped out. For example, I'm starting with

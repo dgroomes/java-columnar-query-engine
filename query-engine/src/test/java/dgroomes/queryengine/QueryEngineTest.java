@@ -25,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class QueryEngineTest {
 
+    private final Executor executor = new Executor();
+
     /**
      * Ordinal integer query over a single-column table.
      */
@@ -35,7 +37,7 @@ public class QueryEngineTest {
         var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(0), i -> i > 0);
 
         // Act
-        QueryResult result = Executor.match(criterion, table);
+        QueryResult result = executor.match(criterion, table);
 
         // Assert
         var columns = switch (result) {
@@ -79,7 +81,7 @@ public class QueryEngineTest {
         var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(1), pop -> pop > 100_000 && pop < 150_000);
 
         // Act
-        QueryResult result = Executor.match(criterion, table);
+        QueryResult result = executor.match(criterion, table);
 
         // Assert
         var columns = switch (result) {
@@ -113,7 +115,7 @@ public class QueryEngineTest {
                 new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("d") < 0));
 
         // Act
-        QueryResult result = Executor.match(criteriaList, table);
+        QueryResult result = executor.match(criteriaList, table);
 
         // Assert
         var columns = switch (result) {
@@ -153,7 +155,7 @@ public class QueryEngineTest {
             var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "South Dakota"::equals);
 
             // Act
-            QueryResult result = Executor.match(criterion, cities);
+            QueryResult result = executor.match(criterion, cities);
 
             // Assert
             var columns = switch (result) {
@@ -176,7 +178,7 @@ public class QueryEngineTest {
             var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "Minnesota"::equals);
 
             // Act
-            QueryResult result = Executor.match(criterion, cities);
+            QueryResult result = executor.match(criterion, cities);
 
             // Assert
             var columns = switch (result) {
@@ -285,7 +287,7 @@ public class QueryEngineTest {
         var criteria = List.of(firstEntityTreesCriterion, secondEntityShrubsCriterion, thirdEntityFernsCriterion);
 
         // Act
-        QueryResult result = Executor.match(criteria, sections);
+        QueryResult result = executor.match(criteria, sections);
 
         // Assert
         var columns = switch (result) {
