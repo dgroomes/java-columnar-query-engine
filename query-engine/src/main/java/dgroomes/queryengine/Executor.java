@@ -1,6 +1,6 @@
 package dgroomes.queryengine;
 
-import dgroomes.queryapi.Criteria;
+import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
 
 import java.util.ArrayDeque;
@@ -41,11 +41,11 @@ public class Executor {
      * <p>
      * I don't care much about generics here. I just want to get something working.
      */
-    public QueryResult match(List<? extends Criteria> criteriaList, Table table) {
-        Objects.requireNonNull(criteriaList, "The 'criteriaList' argument must not be null");
+    public QueryResult match(Query query, Table table) {
+        Objects.requireNonNull(query, "The 'query' argument must not be null");
         Objects.requireNonNull(table, "The 'table' argument must not be null");
 
-        Verifier.VerificationResult verificationResult = verifier.verify(criteriaList, table);
+        Verifier.VerificationResult verificationResult = verifier.verify(query, table);
 
         ExecutionContext executionContext;
         if (verificationResult instanceof Verifier.VerificationResult.IllegalQuery(var message)) {
@@ -83,13 +83,6 @@ public class Executor {
         }
 
         return toResultSet(table, executionContext.matchingIndices());
-    }
-
-    /**
-     * Convenience method for matching a single criterion.
-     */
-    public QueryResult match(Criteria criterion, Table table) {
-        return match(List.of(criterion), table);
     }
 
     /**

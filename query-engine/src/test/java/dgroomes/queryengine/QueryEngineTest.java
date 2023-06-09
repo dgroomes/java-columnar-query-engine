@@ -1,12 +1,11 @@
 package dgroomes.queryengine;
 
 import dgroomes.queryapi.Criteria;
-import dgroomes.queryapi.Pointer;
+import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Failure;
 import dgroomes.queryengine.Executor.QueryResult.Success;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -34,10 +33,11 @@ public class QueryEngineTest {
     void intQuery_oneColumnTable() {
         // Arrange
         var table = ofColumns(ofInts(-1, 0, 1, 2, 3));
-        var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(0), i -> i > 0);
+        var query = new Query();
+        query.rootNode.addCriteria(new Criteria.IntCriteria(0, i1 -> i1 > 0));
 
         // Act
-        QueryResult result = executor.match(criterion, table);
+        QueryResult result = executor.match(query, table);
 
         // Assert
         var columns = switch (result) {
@@ -78,10 +78,11 @@ public class QueryEngineTest {
 
                 // City populations
                 ofInts(425_336, 121_395, 86_697));
-        var criterion = new Criteria.PointedIntCriteria(new Pointer.Ordinal(1), pop -> pop > 100_000 && pop < 150_000);
+        var query = new Query();
+        query.rootNode.addCriteria(new Criteria.IntCriteria(1, pop -> pop > 100_000 && pop < 150_000));
 
         // Act
-        QueryResult result = executor.match(criterion, table);
+        QueryResult result = executor.match(query, table);
 
         // Assert
         var columns = switch (result) {
@@ -110,12 +111,13 @@ public class QueryEngineTest {
         // "d". This test case is interesting because we're exercising two criteria in a single query.
         var table = ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
 
-        var criteriaList = List.of(
-                new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("a") > 0),
-                new Criteria.PointedStringCriteria(new Pointer.Ordinal(0), s -> s.compareTo("d") < 0));
+        var query = new Query();
+        query.rootNode
+                .addCriteria(new Criteria.StringCriteria(0, s -> s.compareTo("a") > 0))
+                .addCriteria(new Criteria.StringCriteria(0, s -> s.compareTo("d") < 0));
 
         // Act
-        QueryResult result = executor.match(criteriaList, table);
+        QueryResult result = executor.match(query, table);
 
         // Assert
         var columns = switch (result) {
@@ -152,10 +154,12 @@ public class QueryEngineTest {
 
         // Query for South Dakota cities
         {
-            var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "South Dakota"::equals);
+            var query = new Query();
+            Query.Node statesNode = query.rootNode.createChild(1);
+            statesNode.addCriteria(new Criteria.StringCriteria(0, "South Dakota"::equals));
 
             // Act
-            QueryResult result = executor.match(criterion, cities);
+            QueryResult result = executor.match(query, cities);
 
             // Assert
             var columns = switch (result) {
@@ -175,10 +179,12 @@ public class QueryEngineTest {
 
         // Query for Minnesota cities
         {
-            var criterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(1, new Pointer.Ordinal(0)), "Minnesota"::equals);
+            var query = new Query();
+            Query.Node statesNode = query.rootNode.createChild(1);
+            statesNode.addCriteria(new Criteria.StringCriteria(0, "Minnesota"::equals));
 
             // Act
-            QueryResult result = executor.match(criterion, cities);
+            QueryResult result = executor.match(query, cities);
 
             // Assert
             var columns = switch (result) {
@@ -197,7 +203,6 @@ public class QueryEngineTest {
         }
     }
 
-    @Disabled("This functionality is not yet implemented. The query yields a false positive on 'maple trees'.")
     @Test
     void multiCriteria_includingIntermediateEntity() {
         // Consider a botanical garden. It is full of many sections of plants. There might be a section of cedar trees,
@@ -251,43 +256,45 @@ public class QueryEngineTest {
                         "ferns", "shrubs", "trees"));
 
         sections.associateTo(sections,
-            // The maple trees (0) are adjacent to the lilacs (1) and blank (3)
-            Association.toMany(1, 3),
+                // The maple trees (0) are adjacent to the lilacs (1) and blank (3)
+                Association.toMany(1, 3),
 
-            // The lilacs (1) are adjacent to the maple trees (0) and blank (2) and blank (4)
-            Association.toMany(0, 2, 4),
+                // The lilacs (1) are adjacent to the maple trees (0) and blank (2) and blank (4)
+                Association.toMany(0, 2, 4),
 
-            // blank (2) is adjacent to the lilacs (1) and blank (5)
-            Association.toMany(1, 5),
+                // blank (2) is adjacent to the lilacs (1) and blank (5)
+                Association.toMany(1, 5),
 
-            // blank (3) is adjacent to the maple trees (0), blank (4) and the Boston ferns (6)
-            Association.toMany(0, 4, 6),
+                // blank (3) is adjacent to the maple trees (0), blank (4) and the Boston ferns (6)
+                Association.toMany(0, 4, 6),
 
-            // blank (4) is adjacent to the lilacs (1), blank (3), blank (5) and the rose bush (7)
-            Association.toMany(1, 3, 5, 7),
+                // blank (4) is adjacent to the lilacs (1), blank (3), blank (5) and the rose bush (7)
+                Association.toMany(1, 3, 5, 7),
 
-            // blank (5) is adjacent to blank (2), blank (4) and the cedar trees (8)
-            Association.toMany(2, 4, 8),
+                // blank (5) is adjacent to blank (2), blank (4) and the cedar trees (8)
+                Association.toMany(2, 4, 8),
 
-            // The Boston ferns (6) are adjacent to blank (3) and the rose bush (7)
-            Association.toMany(3, 7),
+                // The Boston ferns (6) are adjacent to blank (3) and the rose bush (7)
+                Association.toMany(3, 7),
 
-            // The rose bush (7) is adjacent to blank (4), the Boston ferns (6) and the cedar trees (8)
-            Association.toMany(4, 6, 8),
+                // The rose bush (7) is adjacent to blank (4), the Boston ferns (6) and the cedar trees (8)
+                Association.toMany(4, 6, 8),
 
-            // The cedar trees (8) are adjacent to blank (5) and the rose bush (7)
-            Association.toMany(5, 7));
+                // The cedar trees (8) are adjacent to blank (5) and the rose bush (7)
+                Association.toMany(5, 7));
 
         // Let's write the query. NOTE: it's not possible to express the "shrubs" adjacent to "ferns" in the API now. I
         // need to figure out how to implement that.
 
-        var firstEntityTreesCriterion = new Criteria.PointedStringCriteria(new Pointer.Ordinal(1), "trees"::equals);
-        var secondEntityShrubsCriterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(2, new Pointer.Ordinal(1)), "shrubs"::equals);
-        var thirdEntityFernsCriterion = new Criteria.PointedStringCriteria(new Pointer.NestedPointer(2, new Pointer.NestedPointer(2, new Pointer.Ordinal(1))), "ferns"::equals);
-        var criteria = List.of(firstEntityTreesCriterion, secondEntityShrubsCriterion, thirdEntityFernsCriterion);
+        var query = new Query();
+        query.rootNode.addCriteria(new Criteria.StringCriteria(1, "trees"::equals))
+                .createChild(2)
+                .addCriteria(new Criteria.StringCriteria(1, "shrubs"::equals))
+                .createChild(2)
+                .addCriteria(new Criteria.StringCriteria(1, "ferns"::equals));
 
         // Act
-        QueryResult result = executor.match(criteria, sections);
+        QueryResult result = executor.match(query, sections);
 
         // Assert
         var columns = switch (result) {

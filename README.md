@@ -1,7 +1,5 @@
 # java-columnar-query-engine
 
-NOT YET FULLY IMPLEMENTED
-
 A toy Java implementation of a query engine over columnar, schema-ful, in-memory data.
 
 
@@ -66,7 +64,6 @@ Simple requirements. That allows the focus to be on the implementation.
 The code is implemented across a few modules:
 
 * `query-engine`
-  * NOT YET FULLY IMPLEMENTED
   * This module is the actual query engine. It's the most interesting module. 
 * `geography`
   * This module is a pure domain model. It has zero dependencies by design. It models the ZIP, city and
@@ -117,23 +114,23 @@ General clean-ups, TODOs and things I wish to implement for this project:
 
 * [x] DONE (This worked very nicely) Query verifier. Read the definitional "criteria + pointer" object and verify that it's legal for the table, and
   return an "attached" or "live" object that can be used for the query execution.
-* [ ] "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
+* [x] DONE "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
   and the leaves but on the intermediate entities in between. For example, the "North/South/North" query example can't
   be expressed correctly because the "South/North" part can't be expressed.
   * DONE Write a test case.
-  * Express "criteria chains" in the API
+  * DONE Express "criteria chains" in the API
     * Update: I found that I think I want a `ChainMultiCriteria`. An effect of this is that it obsoletes the need for a
       list of criteria. Update: I think it's natural to express this as `And`-named thing (I guess?) And also (stream-of-consciousness)
       I don't need to support "disparate ANDs" and I might need to decouple `Pointer` a bit from `Criteria` (although
       that worked nicely until now). The type of query I want to support is all ANDed together (literally no ORs). And
       querying the root is not special case compared to querying from sub-entities (I need to make one big iterative for
       loop and get rid of the "root index matches" (it's going to be a moving root depending on context)).
-    * Update: this isn't working well. I think it's time to create a simple query verifier which reads the definitional
+    * DONE Update: this isn't working well. I think it's time to create a simple query verifier which reads the definitional
       "criteria + pointer" object (the query) and then turns that into a stateful/attached "query state" object that 
       represents the graph and the query results (like intermediate pruning). This change can be done without changing
       the API. So it's best to do this work, then come back to the "Criteria on intermediate nodes" work otherwise it's
       too much at once.
-  * Implement in the query engine
+  *  DONE Implement the North/South/North query in the main program
 * [x] DONE (UPDATE 2023-05-10 work on this next) Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
   and do a query across associations
   * DONE Define the adjacencies data.

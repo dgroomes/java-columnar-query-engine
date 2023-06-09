@@ -3,13 +3,18 @@ package dgroomes.queryapi;
 import java.util.function.Predicate;
 
 /**
- * A criteria describes a specification (like 'x > 0') for a specific (e.g. "pointed at") column value.
+ * A criteria describes a specification (like 'x > 0') that targets values in a column. The column is not referenced
+ * physically but is instead described by its ordinal pointer.
  */
-sealed public interface Criteria permits Criteria.PointedIntCriteria, Criteria.PointedStringCriteria {
+sealed public interface Criteria permits Criteria.IntCriteria, Criteria.StringCriteria {
 
-    Pointer pointer();
+    /**
+     * The ordinal of the column in the table.
+     * @return
+     */
+    int ordinal();
 
-    record PointedStringCriteria(Pointer pointer, Predicate<String> stringPredicate) implements Criteria {}
+    record StringCriteria(int ordinal, Predicate<String> stringPredicate) implements Criteria {}
 
-    record PointedIntCriteria(Pointer pointer, Predicate<Integer> integerPredicate) implements Criteria {}
+    record IntCriteria(int ordinal, Predicate<Integer> integerPredicate) implements Criteria {}
 }

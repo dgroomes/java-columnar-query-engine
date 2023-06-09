@@ -7,7 +7,7 @@ import dgroomes.geography.Zip;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
 import dgroomes.queryapi.Criteria;
-import dgroomes.queryapi.Pointer;
+import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Association;
 import dgroomes.queryengine.Column;
 import dgroomes.queryengine.Executor;
@@ -17,7 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -216,26 +219,19 @@ public class Runner {
         {
             // Query the data using the 'query engine'.
             //
-            // Specifically, find all ZIP codes that have a population around 10,000 are adjacent to a state with at
+            // Specifically, find all ZIP codes that have a population around 10,000 and are adjacent to a state with at
             // least one city named "Plymouth".
 
-            var populationCriteria = new Criteria.PointedIntCriteria(new Pointer.Ordinal(1), i -> i >= 10_000 && i < 10_100);
-
-            // This pointer is hard to read, so let's break it down in words.
-            //   1. The first pointer is on the ZIP table. It represents column '2' which is the association column to cities.
-            //   2. The second pointer is on the cities table. It represents column '1' which is the association column to states.
-            //   3. The third pointer is on the states table. It represents column '3' which is the association column to other states.
-            //   4. The fourth pointer is on the states table. It represents column '2' which is the association column to cities.
-            //   5. The fifth pointer is on the cities table. It represents column '0' which is the string column of city names.
-            var zipToCityToStateToAdjacentStateToCityToNamePointer = new Pointer.NestedPointer(2,
-                    new Pointer.NestedPointer(1,
-                            new Pointer.NestedPointer(3,
-                                    new Pointer.NestedPointer(2,
-                                            new Pointer.Ordinal(0)))));
-            var plymouthCriteria = new Criteria.PointedStringCriteria(zipToCityToStateToAdjacentStateToCityToNamePointer, "PLYMOUTH"::equals);
+            var query = new Query();
+            query.rootNode.addCriteria(new Criteria.IntCriteria(1, i -> i >= 10_000 && i < 10_100));
+            query.rootNode.createChild(2) // Column 2 is the association column to cities.
+                    .createChild(1) // Column 1 is the association column to states.
+                    .createChild(3) // Column 3 is the association column to other states.
+                    .createChild(2) // Column 2 is the association column to cities.
+                    .addCriteria(new Criteria.StringCriteria(0, "PLYMOUTH"::equals)); // Column 0 is the string column of city names.
 
             Executor executor = new Executor();
-            Executor.QueryResult queryResult = executor.match(List.of(populationCriteria, plymouthCriteria), zipsTable);
+            Executor.QueryResult queryResult = executor.match(query, zipsTable);
 
             switch (queryResult) {
                 case Executor.QueryResult.Success(var resultSet) -> {
@@ -244,6 +240,30 @@ public class Runner {
                     var count = Util.formatInteger(matches);
                     var zipsStr = Arrays.toString(matchingZipCodes.ints());
                     log.info("{} ZIP codes have a population around 10,000 and are adjacent to a state that has a city named 'Plymouth': {}", count, zipsStr);
+                }
+                case Executor.QueryResult.Failure(var msg) -> log.error(msg);
+            }
+        }
+
+        {
+            // Find all states named with "North" that are adjacent to a state with "South" that are adjacent to a state with "North".
+            var query = new Query();
+            query.rootNode.addCriteria(new Criteria.StringCriteria(1, s -> s.contains("North"))) // Column 1 is the string column of state names.
+                    .createChild(3) // Column 3 is the association column to other states.
+                    .addCriteria(new Criteria.StringCriteria(1, s -> s.contains("South")))
+                    .createChild(3)
+                    .addCriteria(new Criteria.StringCriteria(1, s -> s.contains("North")));
+
+            Executor executor = new Executor();
+            Executor.QueryResult queryResult = executor.match(query, statesTable);
+
+            switch (queryResult) {
+                case Executor.QueryResult.Success(var resultSet) -> {
+                    int matches = resultSet.size();
+                    var matchingStateNamesColumn = (Column.StringColumn) resultSet.columns().get(1);
+                    var count = Util.formatInteger(matches);
+                    var names = Arrays.toString(matchingStateNamesColumn.strings());
+                    log.info("{} states have 'North' in their name and are adjacent to states with 'South' in their name which are adjacent to states with 'North' in their name (yes this is totally redundant!): {}", count, names);
                 }
                 case Executor.QueryResult.Failure(var msg) -> log.error(msg);
             }
