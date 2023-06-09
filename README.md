@@ -112,44 +112,6 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [x] DONE (This worked very nicely) Query verifier. Read the definitional "criteria + pointer" object and verify that it's legal for the table, and
-  return an "attached" or "live" object that can be used for the query execution.
-* [x] DONE "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
-  and the leaves but on the intermediate entities in between. For example, the "North/South/North" query example can't
-  be expressed correctly because the "South/North" part can't be expressed.
-  * DONE Write a test case.
-  * DONE Express "criteria chains" in the API
-    * Update: I found that I think I want a `ChainMultiCriteria`. An effect of this is that it obsoletes the need for a
-      list of criteria. Update: I think it's natural to express this as `And`-named thing (I guess?) And also (stream-of-consciousness)
-      I don't need to support "disparate ANDs" and I might need to decouple `Pointer` a bit from `Criteria` (although
-      that worked nicely until now). The type of query I want to support is all ANDed together (literally no ORs). And
-      querying the root is not special case compared to querying from sub-entities (I need to make one big iterative for
-      loop and get rid of the "root index matches" (it's going to be a moving root depending on context)).
-    * DONE Update: this isn't working well. I think it's time to create a simple query verifier which reads the definitional
-      "criteria + pointer" object (the query) and then turns that into a stateful/attached "query state" object that 
-      represents the graph and the query results (like intermediate pruning). This change can be done without changing
-      the API. So it's best to do this work, then come back to the "Criteria on intermediate nodes" work otherwise it's
-      too much at once.
-  *  DONE Implement the North/South/North query in the main program
-* [x] DONE (UPDATE 2023-05-10 work on this next) Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
-  and do a query across associations
-  * DONE Define the adjacencies data.
-  * DONE Define the state data (code and name).
-  * DONE Incorporate the state data into the Arrow data model.
-  * DONE Load the adjacencies data into the in-memory format.
-  * DONE Wire up the association columns correctly in `app/`
-  * DONE Implement a query across state adjacencies data.
-* [x] DONE Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
-  supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
-  words for this right now).
-  * Ok I did the foundation of this work in other tasks, and the task-tracking is quite messy but I'm not going re-write
-    history here. Let's move on. Now I need flesh out the query API.
-  * DONE Support multiple criteria for strings.
-  * DONE Support multiple criteria for ints. Note: if I take on this work now, I will implement it as another copy/paste
-    change and the code will continue to suffer. If I consolidate the design and implementation first, while benefiting
-    from a solid set of regression tests against an API that I'm also happy enough with (no need to change the API for now!)
-    then the refactoring process will be safe/fun and then I come back and implement this task. I need to pay off this
-    tech debt (it was a good debt).
 * [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
@@ -164,15 +126,6 @@ General clean-ups, TODOs and things I wish to implement for this project:
   to learn the API).
 * [ ] SKIP (I agree with my comment in this item: I'm not sure I'm going to sub-type Table.) Generic type parameters should work on the 'match' method. It takes a table and returns table of the exact same
   type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
-* [x] DONE Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
-  allows multiple criteria of multiple types (e.g. string and int).
-  * What happens to `OrdinalSingleFieldIntegerQuery`. Does this become a type that can be used as a component object in
-    a composite query type (e.g. `MultiPointedCriteriaQuery`)?.
-* [x] DONE (pretty good; the other wish list items capture similar improvement ideas nicely) Consolidate the duplicative code in `Executor`.
-  * DONE Remove `PointerSingleFieldStringQuery` because it is obsolete with the more powerful `PointedStringCriteriaQuery`.
-  * DONE Extract some common methods
-  * DONE Be consistent about a 'result set' return type. Combine it with the final "prune" operation.
-  * What else?
 * [ ] (cosmetic) Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
 * [ ] (cosmetic) Criteria/criterion language. Consider it. singular/plural. I don't care much.
 * [ ] (stretch) Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.
@@ -222,3 +175,50 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [x] DONE (answer: yes) Can we make the query execution signature return a table?
 * [x] DONE Separate the query API from the query engine. Use different Gradle modules.
 * [x] DONE Use less AssertJ (although I love it) and rely on pattern matching and plain Java a bit more in the tests.
+* [x] DONE (This worked very nicely) Query verifier. Read the definitional "criteria + pointer" object and verify that it's legal for the table, and
+  return an "attached" or "live" object that can be used for the query execution.
+* [x] DONE "Criteria on intermediate nodes". I can't believe I missed this. We need to be able to match not just on the root
+  and the leaves but on the intermediate entities in between. For example, the "North/South/North" query example can't
+  be expressed correctly because the "South/North" part can't be expressed.
+  * DONE Write a test case.
+  * DONE Express "criteria chains" in the API
+    * Update: I found that I think I want a `ChainMultiCriteria`. An effect of this is that it obsoletes the need for a
+      list of criteria. Update: I think it's natural to express this as `And`-named thing (I guess?) And also (stream-of-consciousness)
+      I don't need to support "disparate ANDs" and I might need to decouple `Pointer` a bit from `Criteria` (although
+      that worked nicely until now). The type of query I want to support is all ANDed together (literally no ORs). And
+      querying the root is not special case compared to querying from sub-entities (I need to make one big iterative for
+      loop and get rid of the "root index matches" (it's going to be a moving root depending on context)).
+    * DONE Update: this isn't working well. I think it's time to create a simple query verifier which reads the definitional
+      "criteria + pointer" object (the query) and then turns that into a stateful/attached "query state" object that
+      represents the graph and the query results (like intermediate pruning). This change can be done without changing
+      the API. So it's best to do this work, then come back to the "Criteria on intermediate nodes" work otherwise it's
+      too much at once.
+  *  DONE Implement the North/South/North query in the main program
+* [x] DONE (UPDATE 2023-05-10 work on this next) Model cyclic graphs in the data using the ["state adjacencies" of my cypher-playground](https://github.com/dgroomes/cypher-playground/blob/dc836b1ac934175394ece264c443bfae47465cd6/postgres-init/2-init-states-data.sql#L1)
+  and do a query across associations
+  * DONE Define the adjacencies data.
+  * DONE Define the state data (code and name).
+  * DONE Incorporate the state data into the Arrow data model.
+  * DONE Load the adjacencies data into the in-memory format.
+  * DONE Wire up the association columns correctly in `app/`
+  * DONE Implement a query across state adjacencies data.
+* [x] DONE Create a generic graph query API plus a (overtly simple) query execution engine. The graph API only
+  supports schema-ful graphs (does this matter?). The query execution engine should prune the vector lists (i can't find
+  words for this right now).
+  * Ok I did the foundation of this work in other tasks, and the task-tracking is quite messy but I'm not going re-write
+    history here. Let's move on. Now I need flesh out the query API.
+  * DONE Support multiple criteria for strings.
+  * DONE Support multiple criteria for ints. Note: if I take on this work now, I will implement it as another copy/paste
+    change and the code will continue to suffer. If I consolidate the design and implementation first, while benefiting
+    from a solid set of regression tests against an API that I'm also happy enough with (no need to change the API for now!)
+    then the refactoring process will be safe/fun and then I come back and implement this task. I need to pay off this
+    tech debt (it was a good debt).
+* [x] DONE Genericize the Query API a bit. `PointedStringCriteriaQuery` is too restrictive. There should be a query type that
+  allows multiple criteria of multiple types (e.g. string and int).
+  * What happens to `OrdinalSingleFieldIntegerQuery`. Does this become a type that can be used as a component object in
+    a composite query type (e.g. `MultiPointedCriteriaQuery`)?.
+* [x] DONE (pretty good; the other wish list items capture similar improvement ideas nicely) Consolidate the duplicative code in `Executor`.
+  * DONE Remove `PointerSingleFieldStringQuery` because it is obsolete with the more powerful `PointedStringCriteriaQuery`.
+  * DONE Extract some common methods
+  * DONE Be consistent about a 'result set' return type. Combine it with the final "prune" operation.
+  * What else?
