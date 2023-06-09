@@ -112,6 +112,14 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
+* [ ] Create a graph generic data structure? Or is this kind of pointless because all classes are actually graphs (
+  fields to other objects are just edges to other vertices). My 'node' stuff was pretty haphazard is why I'm thinking
+  this is interesting. Although it worked so nicely.
+* [ ] The 'query-engine' should maybe just be an execution strategy coordinate? I really need a separate API for storage
+  I think. I'm treating `Table` and `Column` as physical storage (well not durable) but those should be interfaces.
+  Maybe a module `storage-api` and then `storage-in-memory`? I don't care much about the feature set of the storage impl
+  and API but I do care about thinning out query-engine to help me focus on the query execution strategy. Eventually I
+  want to do parallelization and that's going to take a lot of complexity budget.
 * [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
