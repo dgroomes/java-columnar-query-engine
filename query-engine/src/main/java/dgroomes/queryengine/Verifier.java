@@ -24,7 +24,7 @@ public class Verifier {
     }
 
     /**
-     * Verify if the given {@link Criteria} is legal for the given {@link Table}. If the criteria describes columns that
+     * Verify if the given {@link Query} is legal for the given {@link Table}. If the query describes columns that
      * don't exist or types that don't match, then the query is illegal.
      *
      * @param query the query to verify and link
@@ -61,25 +61,27 @@ public class Verifier {
 
                 Column column = currentExecutionNode.table.columns().get(ordinal);
 
-                if (!(column instanceof InMemoryColumn inMemoryColumn)) {
+                if (!(column instanceof InMemoryColumn)) {
                     return new VerificationResult.IllegalQuery("The column is not an in-memory column. This is not supported yet.");
                 }
 
-                switch (inMemoryColumn) {
-                    case InMemoryColumn.StringColumn stringColumn -> {
+                switch (column.type()) {
+                    case STRING -> {
                         if (!(criterion instanceof Criteria.StringCriteria stringCriteria))
                             return new VerificationResult.IllegalQuery("The column is a string column but the criterion is not a string predicate.");
+                        var stringColumn = (InMemoryColumn.StringColumn) column; // This is temporary until we have a better alternative.
                         currentExecutionNode.addColumnPredicate(idx -> stringCriteria.stringPredicate().test(stringColumn.strings()[idx]));
                     }
-                    case InMemoryColumn.IntegerColumn intColumn -> {
+                    case INTEGER -> {
                         if (!(criterion instanceof Criteria.IntCriteria intCriteria))
                             return new VerificationResult.IllegalQuery("The column is an integer column but the criterion is not an integer predicate.");
+                        var intColumn = (InMemoryColumn.IntegerColumn) column; // This is temporary until we have a better alternative.
                         currentExecutionNode.addColumnPredicate(idx -> intCriteria.integerPredicate().test(intColumn.ints()[idx]));
                     }
-                    case InMemoryColumn.BooleanColumn ignored -> {
+                    case BOOLEAN -> {
                         return new VerificationResult.IllegalQuery("Boolean columns are not supported yet.");
                     }
-                    case InMemoryColumn.AssociationColumn ignored -> {
+                    case ASSOCIATION -> {
                         return new VerificationResult.IllegalQuery("Association columns can't be matched on with a scalar criteria.");
                     }
                     case default -> throw new IllegalStateException("Unrecognized column type: %s. This is unexpected.".formatted(column.getClass().getName()));

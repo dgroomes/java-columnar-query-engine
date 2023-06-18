@@ -11,6 +11,8 @@ dependencies {
     // This dependency needs to go away. The 'query-engine' module should code to the interface of the 'data-model-api'
     // module. If part of the query engine is implementation specific, then that's fine but that needs to go in a
     // different module.
+    //
+    // The 'data-model-in-memory' module can be used as a test dependency but not as a main dependency.
     implementation(project(":data-model-in-memory"))
 
     testImplementation(libs.assertj)

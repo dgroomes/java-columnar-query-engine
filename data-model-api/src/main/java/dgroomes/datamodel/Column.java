@@ -9,4 +9,16 @@ public interface Column {
      * The number of elements in the column.
      */
     int height();
+
+    /**
+     * The type of the column.
+     */
+    Type type();
+
+    enum Type {
+        INTEGER,
+        STRING,
+        BOOLEAN,
+        ASSOCIATION,
+    }
 }

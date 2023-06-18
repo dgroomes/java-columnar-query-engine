@@ -27,6 +27,11 @@ sealed public interface InMemoryColumn extends Column {
     record BooleanColumn(boolean[] bools) implements InMemoryColumn {
 
         @Override
+        public Type type() {
+            return Type.BOOLEAN;
+        }
+
+        @Override
         public int height() {
             return bools.length;
         }
@@ -35,12 +40,22 @@ sealed public interface InMemoryColumn extends Column {
     record IntegerColumn(int[] ints) implements InMemoryColumn {
 
         @Override
+        public Type type() {
+            return Type.INTEGER;
+        }
+
+        @Override
         public int height() {
             return ints.length;
         }
     }
 
     record StringColumn(String[] strings) implements InMemoryColumn {
+
+        @Override
+        public Type type() {
+            return Type.STRING;
+        }
 
         @Override
         public int height() {
@@ -55,6 +70,11 @@ sealed public interface InMemoryColumn extends Column {
 
         public final Table associatedEntity;
         public final Association[] associations;
+
+        @Override
+        public Type type() {
+            return Type.ASSOCIATION;
+        }
 
         @Override
         public int height() {
