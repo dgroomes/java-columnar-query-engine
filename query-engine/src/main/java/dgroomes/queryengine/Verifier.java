@@ -1,12 +1,17 @@
 package dgroomes.queryengine;
 
 import dgroomes.datamodel.Column;
+import dgroomes.datamodel.ColumnFilterable;
 import dgroomes.datamodel.Table;
 import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Query;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.IntPredicate;
 
 /**
  * A query verifier (or at least, my naive guess at what a query verifier is. Is this a linker? A compiler?).
@@ -65,27 +70,29 @@ public class Verifier {
                     return new VerificationResult.IllegalQuery("The column is not an in-memory column. This is not supported yet.");
                 }
 
-                switch (column.type()) {
-                    case STRING -> {
+                IntPredicate columnPredicate;
+
+                switch (column.filterableType()) {
+                    case ColumnFilterable.StringColumnFilterable stringFilterable -> {
                         if (!(criterion instanceof Criteria.StringCriteria stringCriteria))
                             return new VerificationResult.IllegalQuery("The column is a string column but the criterion is not a string predicate.");
-                        var stringColumn = (InMemoryColumn.StringColumn) column; // This is temporary until we have a better alternative.
-                        currentExecutionNode.addColumnPredicate(idx -> stringCriteria.stringPredicate().test(stringColumn.strings()[idx]));
+                        columnPredicate = stringFilterable.where(stringCriteria.stringPredicate());
                     }
-                    case INTEGER -> {
+                    case ColumnFilterable.IntegerColumnFilterable integerFilterable -> {
                         if (!(criterion instanceof Criteria.IntCriteria intCriteria))
                             return new VerificationResult.IllegalQuery("The column is an integer column but the criterion is not an integer predicate.");
-                        var intColumn = (InMemoryColumn.IntegerColumn) column; // This is temporary until we have a better alternative.
-                        currentExecutionNode.addColumnPredicate(idx -> intCriteria.integerPredicate().test(intColumn.ints()[idx]));
+                        columnPredicate = integerFilterable.where(intCriteria.integerPredicate());
                     }
-                    case BOOLEAN -> {
+                    case ColumnFilterable.BooleanColumnFilterable ignored -> {
                         return new VerificationResult.IllegalQuery("Boolean columns are not supported yet.");
                     }
-                    case ASSOCIATION -> {
+                    case InMemoryColumn.AssociationColumn ignored -> {
                         return new VerificationResult.IllegalQuery("Association columns can't be matched on with a scalar criteria.");
                     }
                     case default -> throw new IllegalStateException("Unrecognized column type: %s. This is unexpected.".formatted(column.getClass().getName()));
                 }
+
+                currentExecutionNode.addColumnPredicate(columnPredicate);
             }
 
             Map<Integer, Query.Node> childQueryNodesByOrdinal = currentQueryNode.getChildrenByOrdinal();

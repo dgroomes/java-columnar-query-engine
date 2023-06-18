@@ -2,7 +2,11 @@ package dgroomes.inmemory;
 
 import dgroomes.datamodel.Association;
 import dgroomes.datamodel.Column;
+import dgroomes.datamodel.ColumnFilterable;
 import dgroomes.datamodel.Table;
+
+import java.util.function.IntPredicate;
+import java.util.function.Predicate;
 
 /**
  * A {@link Column} implementation that is backed by an in-memory data structure.
@@ -24,11 +28,16 @@ sealed public interface InMemoryColumn extends Column {
         return new StringColumn(strings);
     }
 
-    record BooleanColumn(boolean[] bools) implements InMemoryColumn {
+    record BooleanColumn(boolean[] bools) implements InMemoryColumn, ColumnFilterable.BooleanColumnFilterable {
 
         @Override
-        public Type type() {
-            return Type.BOOLEAN;
+        public ColumnFilterable filterableType() {
+            return this;
+        }
+
+        @Override
+        public IntPredicate where(Predicate<Boolean> predicate) {
+            throw new IllegalStateException("not implemented");
         }
 
         @Override
@@ -37,11 +46,16 @@ sealed public interface InMemoryColumn extends Column {
         }
     }
 
-    record IntegerColumn(int[] ints) implements InMemoryColumn {
+    record IntegerColumn(int[] ints) implements InMemoryColumn, ColumnFilterable.IntegerColumnFilterable {
 
         @Override
-        public Type type() {
-            return Type.INTEGER;
+        public ColumnFilterable filterableType() {
+            return this;
+        }
+
+        @Override
+        public IntPredicate where(IntPredicate predicate) {
+            return idx -> predicate.test(ints[idx]);
         }
 
         @Override
@@ -50,11 +64,16 @@ sealed public interface InMemoryColumn extends Column {
         }
     }
 
-    record StringColumn(String[] strings) implements InMemoryColumn {
+    record StringColumn(String[] strings) implements InMemoryColumn, ColumnFilterable.StringColumnFilterable {
 
         @Override
-        public Type type() {
-            return Type.STRING;
+        public ColumnFilterable filterableType() {
+            return this;
+        }
+
+        @Override
+        public IntPredicate where(Predicate<String> predicate) {
+            return idx -> predicate.test(strings[idx]);
         }
 
         @Override
@@ -66,14 +85,19 @@ sealed public interface InMemoryColumn extends Column {
     // Note: maybe modelling an association as a column of the entity is a bad idea. After all, the association is
     // usually goes both ways (bi-directional) in meaning. For example, a city is contained in a state and that state
     // also contains the city. There is a case for uni-directional associations, but I'm not there right now.
-    final class AssociationColumn implements InMemoryColumn {
+    final class AssociationColumn implements InMemoryColumn, ColumnFilterable.AssociationColumnFilterable {
 
         public final Table associatedEntity;
         public final Association[] associations;
 
         @Override
-        public Type type() {
-            return Type.ASSOCIATION;
+        public ColumnFilterable filterableType() {
+            return this;
+        }
+
+        @Override
+        public IntPredicate where(Predicate<Association> predicate) {
+            throw new IllegalStateException("not implemented");
         }
 
         @Override

@@ -1,5 +1,6 @@
 package dgroomes.queryapi;
 
+import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
 /**
@@ -10,11 +11,10 @@ sealed public interface Criteria permits Criteria.IntCriteria, Criteria.StringCr
 
     /**
      * The ordinal of the column in the table.
-     * @return
      */
     int ordinal();
 
     record StringCriteria(int ordinal, Predicate<String> stringPredicate) implements Criteria {}
 
-    record IntCriteria(int ordinal, Predicate<Integer> integerPredicate) implements Criteria {}
+    record IntCriteria(int ordinal, IntPredicate integerPredicate) implements Criteria {}
 }

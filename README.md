@@ -132,6 +132,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Create concrete implementations of `Table` and `Column` in `data-model-in-memory`. This needs to be called from `:app`.
   * IN PROGRESS Somehow abstract the Verifier away from the `data-model-in-memory`.
     * DONE I think (vaguely, not really sure) I need a `TYPE` enum on `Column` to help the `Verifier` do its job.
+    * DONE (ColumnFilterable interface) I'm going to try something else.
   * Somehow abstract all implementation details out of `query-engine`. It should just code to the API.
 * [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which

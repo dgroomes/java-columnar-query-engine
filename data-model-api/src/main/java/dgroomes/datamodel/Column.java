@@ -13,12 +13,5 @@ public interface Column {
     /**
      * The type of the column.
      */
-    Type type();
-
-    enum Type {
-        INTEGER,
-        STRING,
-        BOOLEAN,
-        ASSOCIATION,
-    }
+    ColumnFilterable filterableType();
 }

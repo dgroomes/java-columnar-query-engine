@@ -105,8 +105,8 @@ public class InMemoryTable implements Table {
 
     @Override
     public Table subset(int[] indices) {
-        List<InMemoryColumn> prunedColumns = columns.stream()
-                .map(column -> switch (column) {
+        var prunedColumns = columns.stream()
+                .<InMemoryColumn>map(column -> switch (column) {
                     case InMemoryColumn.BooleanColumn(var bools) -> {
                         var pruned = new boolean[indices.length];
                         for (int i = 0; i < indices.length; i++) {
