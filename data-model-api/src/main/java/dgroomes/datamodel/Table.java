@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface Table {
 
-    List<Column> columns();
+    List<? extends Column> columns();
 
     /**
      * The 'width' is the number of columns.

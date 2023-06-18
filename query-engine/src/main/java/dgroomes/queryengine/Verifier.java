@@ -2,6 +2,7 @@ package dgroomes.queryengine;
 
 import dgroomes.datamodel.Column;
 import dgroomes.datamodel.Table;
+import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Query;
 
@@ -59,21 +60,26 @@ public class Verifier {
                 }
 
                 Column column = currentExecutionNode.table.columns().get(ordinal);
-                switch (column) {
-                    case Column.StringColumn stringColumn -> {
+
+                if (!(column instanceof InMemoryColumn inMemoryColumn)) {
+                    return new VerificationResult.IllegalQuery("The column is not an in-memory column. This is not supported yet.");
+                }
+
+                switch (inMemoryColumn) {
+                    case InMemoryColumn.StringColumn stringColumn -> {
                         if (!(criterion instanceof Criteria.StringCriteria stringCriteria))
                             return new VerificationResult.IllegalQuery("The column is a string column but the criterion is not a string predicate.");
                         currentExecutionNode.addColumnPredicate(idx -> stringCriteria.stringPredicate().test(stringColumn.strings()[idx]));
                     }
-                    case Column.IntegerColumn intColumn -> {
+                    case InMemoryColumn.IntegerColumn intColumn -> {
                         if (!(criterion instanceof Criteria.IntCriteria intCriteria))
                             return new VerificationResult.IllegalQuery("The column is an integer column but the criterion is not an integer predicate.");
                         currentExecutionNode.addColumnPredicate(idx -> intCriteria.integerPredicate().test(intColumn.ints()[idx]));
                     }
-                    case Column.BooleanColumn ignored -> {
+                    case InMemoryColumn.BooleanColumn ignored -> {
                         return new VerificationResult.IllegalQuery("Boolean columns are not supported yet.");
                     }
-                    case Column.AssociationColumn ignored -> {
+                    case InMemoryColumn.AssociationColumn ignored -> {
                         return new VerificationResult.IllegalQuery("Association columns can't be matched on with a scalar criteria.");
                     }
                     case default -> throw new IllegalStateException("Unrecognized column type: %s. This is unexpected.".formatted(column.getClass().getName()));
@@ -87,7 +93,7 @@ public class Verifier {
                 var queryNode = entry.getValue();
                 Column column = currentExecutionNode.table.columns().get(ordinal);
 
-                if (!(column instanceof Column.AssociationColumn associationColumn)) {
+                if (!(column instanceof InMemoryColumn.AssociationColumn associationColumn)) {
                     return new VerificationResult.IllegalQuery("The column at ordinal %d is not an association column. It is a %s".formatted(ordinal, column.getClass().getName()));
                 }
                 var childNode = currentExecutionNode.createChildNode(associationColumn);

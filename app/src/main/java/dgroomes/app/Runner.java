@@ -1,11 +1,11 @@
 package dgroomes.app;
 
 import dgroomes.datamodel.Association;
-import dgroomes.datamodel.Column;
 import dgroomes.geography.City;
 import dgroomes.geography.GeographyGraph;
 import dgroomes.geography.State;
 import dgroomes.geography.Zip;
+import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.inmemory.InMemoryTable;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
@@ -55,17 +55,17 @@ public class Runner {
         //   1: population (integer)
         //   2: city (association)
         InMemoryTable zipsTable;
-        Column.IntegerColumn zipCodeColumn;
-        Column.IntegerColumn zipPopulationColumn;
-        Column.AssociationColumn zipCityColumn;
+        InMemoryColumn.IntegerColumn zipCodeColumn;
+        InMemoryColumn.IntegerColumn zipPopulationColumn;
+        InMemoryColumn.AssociationColumn zipCityColumn;
 
         // The cities table is made of these columns:
         //   0: city name (string)
         //   1: state (association)
         //   2: ZIP codes (association)
         InMemoryTable citiesTable;
-        Column.StringColumn cityNameColumn;
-        Column.AssociationColumn cityStateColumn;
+        InMemoryColumn.StringColumn cityNameColumn;
+        InMemoryColumn.AssociationColumn cityStateColumn;
 
         // The states table is made of these columns:
         //   0: state code (string)
@@ -74,8 +74,8 @@ public class Runner {
         //   3: state adjacencies (association)
         //   4: state adjacencies (reverse association) (this is a weird one)
         InMemoryTable statesTable;
-        Column.StringColumn stateCodeColumn;
-        Column.StringColumn stateNameColumn;
+        InMemoryColumn.StringColumn stateCodeColumn;
+        InMemoryColumn.StringColumn stateNameColumn;
 
         {
             // Load the state data into the in-memory format
@@ -99,8 +99,8 @@ public class Runner {
                     i++;
                 }
 
-                stateCodeColumn = new Column.StringColumn(stateCodes);
-                stateNameColumn = new Column.StringColumn(stateNames);
+                stateCodeColumn = new InMemoryColumn.StringColumn(stateCodes);
+                stateNameColumn = new InMemoryColumn.StringColumn(stateNames);
                 statesTable = InMemoryTable.ofColumns(stateCodeColumn, stateNameColumn);
             }
 
@@ -129,7 +129,7 @@ public class Runner {
                     i++;
                 }
 
-                cityNameColumn = new Column.StringColumn(cityNames);
+                cityNameColumn = new InMemoryColumn.StringColumn(cityNames);
                 citiesTable = InMemoryTable.ofColumns(cityNameColumn);
                 cityStateColumn = citiesTable.associateTo(statesTable, cityStateAssociations);
             }
@@ -154,8 +154,8 @@ public class Runner {
                     i++;
                 }
 
-                zipCodeColumn = new Column.IntegerColumn(codes);
-                zipPopulationColumn = new Column.IntegerColumn(populations);
+                zipCodeColumn = new InMemoryColumn.IntegerColumn(codes);
+                zipPopulationColumn = new InMemoryColumn.IntegerColumn(populations);
                 zipsTable = InMemoryTable.ofColumns(zipCodeColumn, zipPopulationColumn);
                 zipCityColumn = zipsTable.associateTo(citiesTable, zipCityAssociations);
             }
@@ -236,7 +236,7 @@ public class Runner {
             switch (queryResult) {
                 case Executor.QueryResult.Success(var resultSet) -> {
                     int matches = resultSet.size();
-                    var matchingZipCodes = (Column.IntegerColumn) resultSet.columns().get(0);
+                    var matchingZipCodes = (InMemoryColumn.IntegerColumn) resultSet.columns().get(0);
                     var count = Util.formatInteger(matches);
                     var zipsStr = Arrays.toString(matchingZipCodes.ints());
                     log.info("{} ZIP codes have a population around 10,000 and are adjacent to a state that has a city named 'Plymouth': {}", count, zipsStr);
@@ -260,7 +260,7 @@ public class Runner {
             switch (queryResult) {
                 case Executor.QueryResult.Success(var resultSet) -> {
                     int matches = resultSet.size();
-                    var matchingStateNamesColumn = (Column.StringColumn) resultSet.columns().get(1);
+                    var matchingStateNamesColumn = (InMemoryColumn.StringColumn) resultSet.columns().get(1);
                     var count = Util.formatInteger(matches);
                     var names = Arrays.toString(matchingStateNamesColumn.strings());
                     log.info("{} states have 'North' in their name and are adjacent to states with 'South' in their name which are adjacent to states with 'North' in their name (yes this is totally redundant!): {}", count, names);

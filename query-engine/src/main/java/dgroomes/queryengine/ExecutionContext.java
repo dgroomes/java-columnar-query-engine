@@ -1,8 +1,8 @@
 package dgroomes.queryengine;
 
 import dgroomes.datamodel.Association;
-import dgroomes.datamodel.Column;
 import dgroomes.datamodel.Table;
+import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.util.Util;
 
 import java.util.*;
@@ -39,7 +39,7 @@ public class ExecutionContext {
         public final Table table;
         private int[] matchingIndices;
         public final Node parent;
-        public final Column.AssociationColumn reverseAssociationToParent;
+        public final InMemoryColumn.AssociationColumn reverseAssociationToParent;
 
         public List<Node> childNodes() {
             return List.copyOf(childNodes);
@@ -47,7 +47,7 @@ public class ExecutionContext {
 
         private final List<Node> childNodes = new ArrayList<>();
 
-        public Node(Table table, Node parent, Column.AssociationColumn reverseAssociationToParent) {
+        public Node(Table table, Node parent, InMemoryColumn.AssociationColumn reverseAssociationToParent) {
             this.table = table;
             this.parent = parent;
             this.reverseAssociationToParent = reverseAssociationToParent;
@@ -61,7 +61,7 @@ public class ExecutionContext {
             columnPredicates.add(columnPredicate);
         }
 
-        public Node createChildNode(Column.AssociationColumn associationColumn) {
+        public Node createChildNode(InMemoryColumn.AssociationColumn associationColumn) {
             var childNode = new Node(associationColumn.associatedEntity, this, associationColumn.reverseAssociatedColumn());
             childNodes.add(childNode);
             return childNode;

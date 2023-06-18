@@ -2,7 +2,8 @@ package dgroomes.queryengine;
 
 import dgroomes.datamodel.Association;
 import dgroomes.datamodel.Column;
-import dgroomes.datamodel.Column.IntegerColumn;
+import dgroomes.inmemory.InMemoryColumn;
+import dgroomes.inmemory.InMemoryColumn.StringColumn;
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Query;
 import dgroomes.queryengine.Executor.QueryResult;
@@ -10,7 +11,8 @@ import dgroomes.queryengine.Executor.QueryResult.Failure;
 import dgroomes.queryengine.Executor.QueryResult.Success;
 import org.junit.jupiter.api.Test;
 
-import static dgroomes.datamodel.Column.ofInts;
+import static dgroomes.inmemory.InMemoryColumn.ofInts;
+import static dgroomes.inmemory.InMemoryColumn.ofStrings;
 import static dgroomes.inmemory.InMemoryTable.ofColumns;
 import static dgroomes.queryengine.TestUtil.failed;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,7 +61,7 @@ public class QueryEngineTest {
         assertThat(columns).hasSize(1);
         Column firstColumn = columns.get(0);
 
-        if (!(firstColumn instanceof IntegerColumn(var ints))) {
+        if (!(firstColumn instanceof InMemoryColumn.IntegerColumn(var ints))) {
             throw failed("Expected an IntegerColumn but got a " + firstColumn.getClass().getSimpleName());
         }
 
@@ -74,7 +76,7 @@ public class QueryEngineTest {
         // Arrange
         var table = ofColumns(
                 // City names
-                Column.ofStrings("Minneapolis", "Rochester", "Duluth"),
+                ofStrings("Minneapolis", "Rochester", "Duluth"),
 
                 // City populations
                 ofInts(425_336, 121_395, 86_697));
@@ -93,7 +95,7 @@ public class QueryEngineTest {
         assertThat(columns).hasSize(2);
         Column cityColumn = columns.get(0);
 
-        if (!(cityColumn instanceof Column.StringColumn(var cities))) {
+        if (!(cityColumn instanceof InMemoryColumn.StringColumn(var cities))) {
             throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
         }
 
@@ -109,7 +111,7 @@ public class QueryEngineTest {
         //
         // We're going to search over a simple collection of strings to find those that are greater than "a" but less than
         // "d". This test case is interesting because we're exercising two criteria in a single query.
-        var table = ofColumns(Column.ofStrings("a", "a", "b", "c", "c", "d"));
+        var table = ofColumns(ofStrings("a", "a", "b", "c", "c", "d"));
 
         var query = new Query();
         query.rootNode
@@ -128,7 +130,7 @@ public class QueryEngineTest {
         assertThat(columns).hasSize(1);
         Column firstColumn = columns.get(0);
 
-        if (!(firstColumn instanceof Column.StringColumn(var strings))) {
+        if (!(firstColumn instanceof StringColumn(var strings))) {
             throw failed("Expected a StringColumn but got a " + firstColumn.getClass().getSimpleName());
         }
 
@@ -141,8 +143,8 @@ public class QueryEngineTest {
      */
     @Test
     void queryOnAssociationProperty() {
-        var cities = ofColumns(Column.ofStrings("Minneapolis", "Pierre", "Duluth"));
-        var states = ofColumns(Column.ofStrings("Minnesota", "South Dakota"));
+        var cities = ofColumns(ofStrings("Minneapolis", "Pierre", "Duluth"));
+        var states = ofColumns(ofStrings("Minnesota", "South Dakota"));
         // The "contained in" association from city to state. It is based on the index position of the cities and states
         // expressed above.
         cities.associateTo(states,
@@ -170,7 +172,7 @@ public class QueryEngineTest {
             assertThat(columns).hasSize(2);
             Column cityColumn = columns.get(0);
 
-            if (!(cityColumn instanceof Column.StringColumn(var cityMatches))) {
+            if (!(cityColumn instanceof StringColumn(var cityMatches))) {
                 throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
             }
 
@@ -195,7 +197,7 @@ public class QueryEngineTest {
             assertThat(columns).hasSize(2);
             Column cityColumn = columns.get(0);
 
-            if (!(cityColumn instanceof Column.StringColumn(var cityMatches))) {
+            if (!(cityColumn instanceof StringColumn(var cityMatches))) {
                 throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
             }
 
@@ -246,11 +248,11 @@ public class QueryEngineTest {
         // the rose bush and then the Boston ferns.
 
         var sections = ofColumns(
-                Column.ofStrings(
+                ofStrings(
                         "maple trees", "lilacs", "",
                         "", "", "",
                         "Boston ferns", "rose bush", "cedar trees"),
-                Column.ofStrings(
+                ofStrings(
                         "trees", "shrubs", "",
                         "", "", "",
                         "ferns", "shrubs", "trees"));
@@ -309,7 +311,7 @@ public class QueryEngineTest {
         assertThat(columns).hasSize(4);
         Column nameColumn = columns.get(0);
 
-        if (!(nameColumn instanceof Column.StringColumn(var nameMatches))) {
+        if (!(nameColumn instanceof StringColumn(var nameMatches))) {
             throw failed("Expected a StringColumn but got a " + nameColumn.getClass().getSimpleName());
         }
 

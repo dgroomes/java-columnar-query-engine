@@ -15,9 +15,9 @@ import java.util.stream.IntStream;
  */
 public class InMemoryTable implements Table {
 
-    private final List<Column> columns;
+    private final List<InMemoryColumn> columns;
 
-    public InMemoryTable(List<Column> columns) {
+    public InMemoryTable(List<InMemoryColumn> columns) {
         this.columns = columns;
     }
 
@@ -25,14 +25,14 @@ public class InMemoryTable implements Table {
      * Note: consider making the column list unmodifiable for callers.
      */
     @Override
-    public List<Column> columns() {
+    public List<? extends Column> columns() {
         return columns;
     }
 
     /**
-     * Convenience method for creating an {@link Column.IntegerColumn} for toy examples, like in test cases.
+     * Convenience method for creating an {@link InMemoryColumn.IntegerColumn} for toy examples, like in test cases.
      */
-    public static InMemoryTable ofColumns(Column... columns) {
+    public static InMemoryTable ofColumns(InMemoryColumn... columns) {
         var mutableList = new ArrayList<>(Arrays.asList(columns));
         return new InMemoryTable(mutableList);
     }
@@ -44,8 +44,8 @@ public class InMemoryTable implements Table {
      * @param associations     the associations from this entity (X) to the associated entity (Y)
      * @return the association column
      */
-    public Column.AssociationColumn associateTo(InMemoryTable associatedEntity, Association... associations) {
-        var associationColumn = new Column.AssociationColumn(associatedEntity, associations);
+    public InMemoryColumn.AssociationColumn associateTo(InMemoryTable associatedEntity, Association... associations) {
+        var associationColumn = new InMemoryColumn.AssociationColumn(associatedEntity, associations);
         // Note: yes this is nasty; we are using a mutable data structure. I love using records, but I often wind up with
         // a need to mutate it and struggle.
         this.columns.add(associationColumn);
@@ -53,7 +53,7 @@ public class InMemoryTable implements Table {
         // Create a reverse association from Y to X.
         //
         // Note: this is some stream of consciousness code and needs to be cleaned up.
-        Column.AssociationColumn reverseAssociationColumn;
+        InMemoryColumn.AssociationColumn reverseAssociationColumn;
         {
             var yIndexToXAssociations = new HashMap<Integer, List<Integer>>();
             // Initialize the map with empty lists.
@@ -83,58 +83,58 @@ public class InMemoryTable implements Table {
                     default -> new Association.Many(xIndices.stream().mapToInt(i -> i).toArray());
                 };
             }).toArray(Association[]::new);
-            reverseAssociationColumn = new Column.AssociationColumn(this, yToXAssociations);
+            reverseAssociationColumn = new InMemoryColumn.AssociationColumn(this, yToXAssociations);
             reverseAssociationColumn.setReverseAssociatedColumn(associationColumn);
             associationColumn.setReverseAssociatedColumn(reverseAssociationColumn);
         }
 
-        associatedEntity.columns().add(reverseAssociationColumn);
+        associatedEntity.columns.add(reverseAssociationColumn);
         return associationColumn;
     }
 
     public int size() {
         // This implementation is silly.
-        Column column = columns.get(0);
+        var column = columns.get(0);
         return switch (column) {
-            case Column.BooleanColumn boolColumn -> boolColumn.bools().length;
-            case Column.IntegerColumn intColumn -> intColumn.ints().length;
-            case Column.StringColumn stringColumn -> stringColumn.strings().length;
-            case Column.AssociationColumn associationColumn -> associationColumn.associations.length;
+            case InMemoryColumn.BooleanColumn boolColumn -> boolColumn.bools().length;
+            case InMemoryColumn.IntegerColumn intColumn -> intColumn.ints().length;
+            case InMemoryColumn.StringColumn stringColumn -> stringColumn.strings().length;
+            case InMemoryColumn.AssociationColumn associationColumn -> associationColumn.associations.length;
         };
     }
 
     @Override
     public Table subset(int[] indices) {
-        List<Column> prunedColumns = columns().stream()
+        List<InMemoryColumn> prunedColumns = columns.stream()
                 .map(column -> switch (column) {
-                    case Column.BooleanColumn(var bools) -> {
+                    case InMemoryColumn.BooleanColumn(var bools) -> {
                         var pruned = new boolean[indices.length];
                         for (int i = 0; i < indices.length; i++) {
                             pruned[i] = bools[indices[i]];
                         }
-                        yield new Column.BooleanColumn(pruned);
+                        yield new InMemoryColumn.BooleanColumn(pruned);
                     }
-                    case Column.IntegerColumn(var ints) -> {
+                    case InMemoryColumn.IntegerColumn(var ints) -> {
                         var pruned = new int[indices.length];
                         for (int i = 0; i < indices.length; i++) {
                             pruned[i] = ints[indices[i]];
                         }
-                        yield new Column.IntegerColumn(pruned);
+                        yield new InMemoryColumn.IntegerColumn(pruned);
                     }
-                    case Column.StringColumn(var strings) -> {
+                    case InMemoryColumn.StringColumn(var strings) -> {
                         var pruned = new String[indices.length];
                         for (int i = 0; i < indices.length; i++) {
                             pruned[i] = strings[indices[i]];
                         }
-                        yield new Column.StringColumn(pruned);
+                        yield new InMemoryColumn.StringColumn(pruned);
                     }
-                    case Column.AssociationColumn associationColumn -> {
+                    case InMemoryColumn.AssociationColumn associationColumn -> {
                         var associations = associationColumn.associations;
                         var pruned = new Association[indices.length];
                         for (int i = 0; i < indices.length; i++) {
                             pruned[i] = associations[indices[i]];
                         }
-                        yield new Column.AssociationColumn(associationColumn.associatedEntity, pruned);
+                        yield new InMemoryColumn.AssociationColumn(associationColumn.associatedEntity, pruned);
                     }
                 })
                 .toList();
