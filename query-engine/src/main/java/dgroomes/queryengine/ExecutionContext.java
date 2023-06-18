@@ -36,10 +36,10 @@ public class ExecutionContext {
     public static class Node {
 
         private final List<IntPredicate> columnPredicates = new ArrayList<>();
-        public final Table table;
+        final Table table;
         private int[] matchingIndices;
-        public final Node parent;
-        public final InMemoryColumn.AssociationColumn reverseAssociationToParent;
+        final Node parent;
+        private final InMemoryColumn.AssociationColumn reverseAssociationToParent;
 
         public List<Node> childNodes() {
             return List.copyOf(childNodes);
@@ -47,7 +47,7 @@ public class ExecutionContext {
 
         private final List<Node> childNodes = new ArrayList<>();
 
-        public Node(Table table, Node parent, InMemoryColumn.AssociationColumn reverseAssociationToParent) {
+        private Node(Table table, Node parent, InMemoryColumn.AssociationColumn reverseAssociationToParent) {
             this.table = table;
             this.parent = parent;
             this.reverseAssociationToParent = reverseAssociationToParent;

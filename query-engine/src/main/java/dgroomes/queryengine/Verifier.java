@@ -66,10 +66,6 @@ public class Verifier {
 
                 Column column = currentExecutionNode.table.columns().get(ordinal);
 
-                if (!(column instanceof InMemoryColumn)) {
-                    return new VerificationResult.IllegalQuery("The column is not an in-memory column. This is not supported yet.");
-                }
-
                 IntPredicate columnPredicate;
 
                 switch (column.filterableType()) {
@@ -86,10 +82,11 @@ public class Verifier {
                     case ColumnFilterable.BooleanColumnFilterable ignored -> {
                         return new VerificationResult.IllegalQuery("Boolean columns are not supported yet.");
                     }
-                    case InMemoryColumn.AssociationColumn ignored -> {
+                    case ColumnFilterable.AssociationColumnFilterable ignored -> {
                         return new VerificationResult.IllegalQuery("Association columns can't be matched on with a scalar criteria.");
                     }
-                    case default -> throw new IllegalStateException("Unrecognized column type: %s. This is unexpected.".formatted(column.getClass().getName()));
+                    case default ->
+                            throw new IllegalStateException("Unrecognized column type: %s. This is unexpected.".formatted(column.getClass().getName()));
                 }
 
                 currentExecutionNode.addColumnPredicate(columnPredicate);
