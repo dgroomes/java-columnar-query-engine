@@ -65,6 +65,14 @@ The code is implemented across a few modules:
 
 * `query-engine`
   * This module is the actual query engine. It's the most interesting module. 
+* `query-api`
+  * The API for expressing queries. This might change. I'm not sure. 
+* `data-model-api`
+  * NOT YET IMPLEMENTED
+  * This defines the core interfaces of tables, columns and associations. 
+* `data-model-in-memory`
+  * NOT YET IMPLEMENTED
+  * This module is a concrete implementation of the data model API using in-memory data structures (i.e. no file IO).
 * `geography`
   * This module is a pure domain model. It has zero dependencies by design. It models the ZIP, city and
   state data which we can collectively refer to as "geography" for short.
@@ -115,11 +123,14 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [ ] Create a graph generic data structure? Or is this kind of pointless because all classes are actually graphs (
   fields to other objects are just edges to other vertices). My 'node' stuff was pretty haphazard is why I'm thinking
   this is interesting. Although it worked so nicely.
-* [ ] The 'query-engine' should maybe just be an execution strategy coordinate? I really need a separate API for storage
-  I think. I'm treating `Table` and `Column` as physical storage (well not durable) but those should be interfaces.
-  Maybe a module `storage-api` and then `storage-in-memory`? I don't care much about the feature set of the storage impl
-  and API but I do care about thinning out query-engine to help me focus on the query execution strategy. Eventually I
-  want to do parallelization and that's going to take a lot of complexity budget.
+* [ ] IN PROGRESS The 'query-engine' should maybe just be an execution strategy? I really need a separate API for the data model and
+  the physical implementation I think. I'm treating `Table` and `Column` as physical but those should be interfaces.
+  Maybe a module `data-model-api` and then `data-model-in-memory`? I don't care much about the feature set of the
+  physical impl and API but I do care about thinning out query-engine to help me focus on the query execution strategy.
+  Eventually I want to do parallelization and that's going to take a lot of complexity budget.
+  * IN PROGRESS Scaffold out the modules: `data-model-api` and `data-model-in-memory`.
+  * Create concrete implementations of `Table` and `Column` in `data-model-in-memory`. This needs to be called from `:app`.
+  * Somehow abstract all implementation details out of `query-engine`. It should just code to the API.
 * [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.

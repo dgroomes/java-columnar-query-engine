@@ -1,7 +1,10 @@
 package dgroomes.queryengine;
 
+import dgroomes.datamodel.Association;
+import dgroomes.datamodel.Column;
+import dgroomes.datamodel.Table;
 import dgroomes.queryapi.Query;
-import dgroomes.queryengine.Column.IntegerColumn;
+import dgroomes.datamodel.Column.IntegerColumn;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

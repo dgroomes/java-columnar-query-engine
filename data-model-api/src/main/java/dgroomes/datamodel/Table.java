@@ -1,4 +1,4 @@
-package dgroomes.queryengine;
+package dgroomes.datamodel;
 
 import java.util.ArrayList;
 import java.util.Arrays;

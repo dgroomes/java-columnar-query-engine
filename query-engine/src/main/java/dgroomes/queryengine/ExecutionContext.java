@@ -1,5 +1,8 @@
 package dgroomes.queryengine;
 
+import dgroomes.datamodel.Association;
+import dgroomes.datamodel.Column;
+import dgroomes.datamodel.Table;
 import dgroomes.util.Util;
 
 import java.util.*;

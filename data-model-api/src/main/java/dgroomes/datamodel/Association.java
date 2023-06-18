@@ -1,4 +1,4 @@
-package dgroomes.queryengine;
+package dgroomes.datamodel;
 
 /**
  * This is a key type. {@link Association} represents an association between two tables.

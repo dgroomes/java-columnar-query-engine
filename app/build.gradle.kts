@@ -8,6 +8,8 @@ dependencies {
     implementation(libs.slf4j.simple)
     implementation(project(":geography-loader"))
     implementation(project(":util"))
+    implementation(project(":data-model-in-memory"))
+    implementation(project(":query-engine"))
 
     testImplementation(libs.assertj)
     testImplementation(libs.junit.jupiter.api)

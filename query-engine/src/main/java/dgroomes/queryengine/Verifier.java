@@ -1,5 +1,7 @@
 package dgroomes.queryengine;
 
+import dgroomes.datamodel.Column;
+import dgroomes.datamodel.Table;
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Query;
 

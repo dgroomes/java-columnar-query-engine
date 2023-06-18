@@ -1,8 +1,11 @@
 package dgroomes.queryengine;
 
+import dgroomes.datamodel.Association;
+import dgroomes.datamodel.Column;
+import dgroomes.datamodel.Table;
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Query;
-import dgroomes.queryengine.Column.IntegerColumn;
+import dgroomes.datamodel.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Failure;
 import dgroomes.queryengine.Executor.QueryResult.Success;
@@ -10,8 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static dgroomes.queryengine.Column.ofInts;
-import static dgroomes.queryengine.Table.ofColumns;
+import static dgroomes.datamodel.Column.ofInts;
+import static dgroomes.datamodel.Table.ofColumns;
 import static dgroomes.queryengine.TestUtil.failed;
 import static org.assertj.core.api.Assertions.assertThat;
 
