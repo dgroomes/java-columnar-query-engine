@@ -2,19 +2,16 @@ package dgroomes.queryengine;
 
 import dgroomes.datamodel.Association;
 import dgroomes.datamodel.Column;
-import dgroomes.datamodel.Table;
+import dgroomes.datamodel.Column.IntegerColumn;
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Query;
-import dgroomes.datamodel.Column.IntegerColumn;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Failure;
 import dgroomes.queryengine.Executor.QueryResult.Success;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
 import static dgroomes.datamodel.Column.ofInts;
-import static dgroomes.datamodel.Table.ofColumns;
+import static dgroomes.inmemory.InMemoryTable.ofColumns;
 import static dgroomes.queryengine.TestUtil.failed;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,7 +53,7 @@ public class QueryEngineTest {
             // That's not so bad, but it is redundant. This style isn't necessarily better, but I want to keep exercising
             // my Java language skills.
             case Failure(var msg) -> throw failed(msg);
-            case Success(Table(List<Column> c)) -> c;
+            case Success(var resultTable) -> resultTable.columns();
         };
 
         assertThat(columns).hasSize(1);
@@ -90,7 +87,7 @@ public class QueryEngineTest {
         // Assert
         var columns = switch (result) {
             case Failure(var msg) -> throw failed(msg);
-            case Success(Table(List<Column> c)) -> c;
+            case Success(var resultTable) -> resultTable.columns();
         };
 
         assertThat(columns).hasSize(2);
@@ -125,7 +122,7 @@ public class QueryEngineTest {
         // Assert
         var columns = switch (result) {
             case Failure(var msg) -> throw failed(msg);
-            case Success(Table(List<Column> c)) -> c;
+            case Success(var resultTable) -> resultTable.columns();
         };
 
         assertThat(columns).hasSize(1);
@@ -167,7 +164,7 @@ public class QueryEngineTest {
             // Assert
             var columns = switch (result) {
                 case Failure(var msg) -> throw failed(msg);
-                case Success(Table(List<Column> c)) -> c;
+                case Success(var resultTable) -> resultTable.columns();
             };
 
             assertThat(columns).hasSize(2);
@@ -192,7 +189,7 @@ public class QueryEngineTest {
             // Assert
             var columns = switch (result) {
                 case Failure(var msg) -> throw failed(msg);
-                case Success(Table(List<Column> c)) -> c;
+                case Success(var resultTable) -> resultTable.columns();
             };
 
             assertThat(columns).hasSize(2);
@@ -302,7 +299,7 @@ public class QueryEngineTest {
         // Assert
         var columns = switch (result) {
             case Failure(var msg) -> throw failed(msg);
-            case Success(Table(List<Column> c)) -> c;
+            case Success(var resultTable) -> resultTable.columns();
         };
 
         // The first column is the name (e.g. "cedar trees")

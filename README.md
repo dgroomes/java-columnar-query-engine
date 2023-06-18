@@ -128,8 +128,8 @@ General clean-ups, TODOs and things I wish to implement for this project:
   Maybe a module `data-model-api` and then `data-model-in-memory`? I don't care much about the feature set of the
   physical impl and API but I do care about thinning out query-engine to help me focus on the query execution strategy.
   Eventually I want to do parallelization and that's going to take a lot of complexity budget.
-  * IN PROGRESS Scaffold out the modules: `data-model-api` and `data-model-in-memory`.
-  * Create concrete implementations of `Table` and `Column` in `data-model-in-memory`. This needs to be called from `:app`.
+  * DONE Scaffold out the modules: `data-model-api` and `data-model-in-memory`.
+  * IN PROGRESS Create concrete implementations of `Table` and `Column` in `data-model-in-memory`. This needs to be called from `:app`.
   * Somehow abstract all implementation details out of `query-engine`. It should just code to the API.
 * [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which

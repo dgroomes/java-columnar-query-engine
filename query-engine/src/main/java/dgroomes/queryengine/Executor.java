@@ -1,10 +1,7 @@
 package dgroomes.queryengine;
 
-import dgroomes.datamodel.Association;
-import dgroomes.datamodel.Column;
 import dgroomes.datamodel.Table;
 import dgroomes.queryapi.Query;
-import dgroomes.datamodel.Column.IntegerColumn;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -85,51 +82,9 @@ public class Executor {
             if (parent != null) leaves.push(parent);
         }
 
-        return toResultSet(table, executionContext.matchingIndices());
-    }
-
-    /**
-     * Prune the table down to the rows at the matching indices This represents the final "result set" of the query.
-     * <p>
-     * This is designed to be used after evaluating the query criteria where we have identified a set of rows (by index)
-     * that matched the criteria.
-     */
-    private QueryResult.Success toResultSet(Table table, int[] indices) {
-        List<Column> prunedColumns = table.columns().stream()
-                .map(column -> switch (column) {
-                    case Column.BooleanColumn(var bools) -> {
-                        var pruned = new boolean[indices.length];
-                        for (int i = 0; i < indices.length; i++) {
-                            pruned[i] = bools[indices[i]];
-                        }
-                        yield new Column.BooleanColumn(pruned);
-                    }
-                    case IntegerColumn(var ints) -> {
-                        var pruned = new int[indices.length];
-                        for (int i = 0; i < indices.length; i++) {
-                            pruned[i] = ints[indices[i]];
-                        }
-                        yield new IntegerColumn(pruned);
-                    }
-                    case Column.StringColumn(var strings) -> {
-                        var pruned = new String[indices.length];
-                        for (int i = 0; i < indices.length; i++) {
-                            pruned[i] = strings[indices[i]];
-                        }
-                        yield new Column.StringColumn(pruned);
-                    }
-                    case Column.AssociationColumn associationColumn -> {
-                        var associations = associationColumn.associations;
-                        var pruned = new Association[indices.length];
-                        for (int i = 0; i < indices.length; i++) {
-                            pruned[i] = associations[indices[i]];
-                        }
-                        yield new Column.AssociationColumn(associationColumn.associatedEntity, pruned);
-                    }
-                })
-                .toList();
-
-        return new QueryResult.Success(new Table(prunedColumns));
+        // Prune the table down to the rows at the matching indices This represents the final "result set" of the query.
+        Table subset = table.subset(executionContext.matchingIndices());
+        return new QueryResult.Success(subset);
     }
 
     public sealed interface QueryResult permits QueryResult.Success, QueryResult.Failure {

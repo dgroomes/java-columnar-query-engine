@@ -1,17 +1,17 @@
 package dgroomes.app;
 
+import dgroomes.datamodel.Association;
+import dgroomes.datamodel.Column;
 import dgroomes.geography.City;
 import dgroomes.geography.GeographyGraph;
 import dgroomes.geography.State;
 import dgroomes.geography.Zip;
+import dgroomes.inmemory.InMemoryTable;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Query;
-import dgroomes.datamodel.Association;
-import dgroomes.datamodel.Column;
 import dgroomes.queryengine.Executor;
-import dgroomes.datamodel.Table;
 import dgroomes.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class Runner {
         //   0: ZIP code (integer)
         //   1: population (integer)
         //   2: city (association)
-        Table zipsTable;
+        InMemoryTable zipsTable;
         Column.IntegerColumn zipCodeColumn;
         Column.IntegerColumn zipPopulationColumn;
         Column.AssociationColumn zipCityColumn;
@@ -63,7 +63,7 @@ public class Runner {
         //   0: city name (string)
         //   1: state (association)
         //   2: ZIP codes (association)
-        Table citiesTable;
+        InMemoryTable citiesTable;
         Column.StringColumn cityNameColumn;
         Column.AssociationColumn cityStateColumn;
 
@@ -73,7 +73,7 @@ public class Runner {
         //   2: cities (association)
         //   3: state adjacencies (association)
         //   4: state adjacencies (reverse association) (this is a weird one)
-        Table statesTable;
+        InMemoryTable statesTable;
         Column.StringColumn stateCodeColumn;
         Column.StringColumn stateNameColumn;
 
@@ -101,7 +101,7 @@ public class Runner {
 
                 stateCodeColumn = new Column.StringColumn(stateCodes);
                 stateNameColumn = new Column.StringColumn(stateNames);
-                statesTable = Table.ofColumns(stateCodeColumn, stateNameColumn);
+                statesTable = InMemoryTable.ofColumns(stateCodeColumn, stateNameColumn);
             }
 
             // Load the city data into the in-memory format.
@@ -130,7 +130,7 @@ public class Runner {
                 }
 
                 cityNameColumn = new Column.StringColumn(cityNames);
-                citiesTable = Table.ofColumns(cityNameColumn);
+                citiesTable = InMemoryTable.ofColumns(cityNameColumn);
                 cityStateColumn = citiesTable.associateTo(statesTable, cityStateAssociations);
             }
 
@@ -156,7 +156,7 @@ public class Runner {
 
                 zipCodeColumn = new Column.IntegerColumn(codes);
                 zipPopulationColumn = new Column.IntegerColumn(populations);
-                zipsTable = Table.ofColumns(zipCodeColumn, zipPopulationColumn);
+                zipsTable = InMemoryTable.ofColumns(zipCodeColumn, zipPopulationColumn);
                 zipCityColumn = zipsTable.associateTo(citiesTable, zipCityAssociations);
             }
 
