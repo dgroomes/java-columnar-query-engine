@@ -8,13 +8,8 @@ dependencies {
     api(project(":query-api"))
     api(project(":data-model-api"))
 
-    // This dependency needs to go away. The 'query-engine' module should code to the interface of the 'data-model-api'
-    // module. If part of the query engine is implementation specific, then that's fine but that needs to go in a
-    // different module.
-    //
     // The 'data-model-in-memory' module can be used as a test dependency but not as a main dependency.
-    implementation(project(":data-model-in-memory"))
-
+    testImplementation(project(":data-model-in-memory"))
     testImplementation(libs.assertj)
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)

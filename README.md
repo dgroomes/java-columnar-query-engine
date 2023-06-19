@@ -66,12 +66,10 @@ The code is implemented across a few modules:
 * `query-engine`
   * This module is the actual query engine. It's the most interesting module. 
 * `query-api`
-  * The API for expressing queries. This might change. I'm not sure. 
+  * The API for expressing queries. This might change. I'm not sure.
 * `data-model-api`
-  * NOT YET IMPLEMENTED
   * This defines the core interfaces of tables, columns and associations. 
 * `data-model-in-memory`
-  * NOT YET IMPLEMENTED
   * This module is a concrete implementation of the data model API using in-memory data structures (i.e. no file IO).
 * `geography`
   * This module is a pure domain model. It has zero dependencies by design. It models the ZIP, city and
@@ -125,7 +123,13 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [ ] Create a graph generic data structure? Or is this kind of pointless because all classes are actually graphs (
   fields to other objects are just edges to other vertices). My 'node' stuff was pretty haphazard is why I'm thinking
   this is interesting. Although it worked so nicely.
-* [ ] IN PROGRESS The 'query-engine' should maybe just be an execution strategy? I really need a separate API for the data model and
+* [ ] Create a parellel query engine. Parallelization would be cool, and it's just a natural thing to do with data
+  workloads like this. Note to self: create a new module for this. I think creating more layers of abstraction within
+  `query-engine` to accommodate different behavior will not scale well. It's ok to just re-implement some things for the
+  sake of decoupling, interpretability, execution speed, and development speed. Thinking more widely, I even want to
+  just use SQLite, DuckDB etc as a form of a "query engine" and be able to benchmark the same workload between my query
+  engine (and in-memory column model).  
+* [x] DONE The 'query-engine' should maybe just be an execution strategy? I really need a separate API for the data model and
   the physical implementation I think. I'm treating `Table` and `Column` as physical but those should be interfaces.
   Maybe a module `data-model-api` and then `data-model-in-memory`? I don't care much about the feature set of the
   physical impl and API but I do care about thinning out query-engine to help me focus on the query execution strategy.
@@ -135,7 +139,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Somehow abstract the Verifier away from the `data-model-in-memory`.
     * DONE I think (vaguely, not really sure) I need a `TYPE` enum on `Column` to help the `Verifier` do its job.
     * DONE (ColumnFilterable interface) I'm going to try something else.
-  * Somehow abstract all implementation details out of `query-engine`. It should just code to the API.
+  * DONE Somehow abstract all implementation details out of `query-engine`. It should just code to the API.
 * [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
