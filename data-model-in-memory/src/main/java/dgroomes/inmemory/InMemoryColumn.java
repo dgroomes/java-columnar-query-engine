@@ -1,9 +1,6 @@
 package dgroomes.inmemory;
 
-import dgroomes.datamodel.Association;
-import dgroomes.datamodel.Column;
-import dgroomes.datamodel.ColumnFilterable;
-import dgroomes.datamodel.Table;
+import dgroomes.datamodel.*;
 
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
@@ -85,7 +82,7 @@ sealed public interface InMemoryColumn extends Column {
     // Note: maybe modelling an association as a column of the entity is a bad idea. After all, the association is
     // usually goes both ways (bi-directional) in meaning. For example, a city is contained in a state and that state
     // also contains the city. There is a case for uni-directional associations, but I'm not there right now.
-    final class AssociationColumn implements InMemoryColumn, ColumnFilterable.AssociationColumnFilterable {
+    final class AssociationColumn implements InMemoryColumn, dgroomes.datamodel.AssociationColumn, ColumnFilterable.AssociationColumnFilterable {
 
         public final Table associatedEntity;
         public final Association[] associations;
@@ -121,11 +118,22 @@ sealed public interface InMemoryColumn extends Column {
             this.reverseAssociatedColumn = reverseAssociatedColumn;
         }
 
+        @Override
         public AssociationColumn reverseAssociatedColumn() {
             if (reverseAssociatedColumn == null) {
                 throw new IllegalStateException("reverseAssociatedColumn was never set");
             }
             return reverseAssociatedColumn;
+        }
+
+        @Override
+        public Table associatedEntity() {
+            return associatedEntity;
+        }
+
+        @Override
+        public Association associationsForIndex(int i) {
+            return associations[i];
         }
     }
 }

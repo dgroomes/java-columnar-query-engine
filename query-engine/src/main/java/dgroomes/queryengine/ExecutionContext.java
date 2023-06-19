@@ -1,8 +1,8 @@
 package dgroomes.queryengine;
 
 import dgroomes.datamodel.Association;
+import dgroomes.datamodel.AssociationColumn;
 import dgroomes.datamodel.Table;
-import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.util.Util;
 
 import java.util.*;
@@ -39,7 +39,7 @@ public class ExecutionContext {
         final Table table;
         private int[] matchingIndices;
         final Node parent;
-        private final InMemoryColumn.AssociationColumn reverseAssociationToParent;
+        private final AssociationColumn associationToParent;
 
         public List<Node> childNodes() {
             return List.copyOf(childNodes);
@@ -47,10 +47,10 @@ public class ExecutionContext {
 
         private final List<Node> childNodes = new ArrayList<>();
 
-        private Node(Table table, Node parent, InMemoryColumn.AssociationColumn reverseAssociationToParent) {
+        private Node(Table table, Node parent, AssociationColumn associationToParent) {
             this.table = table;
             this.parent = parent;
-            this.reverseAssociationToParent = reverseAssociationToParent;
+            this.associationToParent = associationToParent;
 
             // We start with the assumption that all values in the column match. This is indeed a wasteful allocation
             // but this is the model we have for now.
@@ -61,8 +61,8 @@ public class ExecutionContext {
             columnPredicates.add(columnPredicate);
         }
 
-        public Node createChildNode(InMemoryColumn.AssociationColumn associationColumn) {
-            var childNode = new Node(associationColumn.associatedEntity, this, associationColumn.reverseAssociatedColumn());
+        public Node createChildNode(AssociationColumn associationToChild) {
+            var childNode = new Node(associationToChild.associatedEntity(), this, associationToChild.reverseAssociatedColumn());
             childNodes.add(childNode);
             return childNode;
         }
@@ -86,16 +86,19 @@ public class ExecutionContext {
                     .toArray();
         }
 
+        /**
+         * This is an "upwards" filter. This method narrows that parent node's matching indices to the rows of the
+         * parent that are associated from rows in the current node.
+         */
         public void filterParent() {
             if (parent == null) return; // The root node is the only node without a parent.
 
-            // Because the arrays are ordered, we can do a zipper intersection.
-            Association[] reverseAssociations = reverseAssociationToParent.associations;
+            // This represents indices *of the parent* that are pointed to by *live rows* of the current node.
             var associationMatches = new HashSet<Integer>();
 
             var EMPTY = new int[0];
             for (int i : matchingIndices) {
-                Association reverseAssociation = reverseAssociations[i];
+                Association reverseAssociation = associationToParent.associationsForIndex(i);
                 var toAdd = switch (reverseAssociation) {
                     case Association.Many(var indices) -> indices;
                     case Association.One(var index) -> new int[]{index};
@@ -109,6 +112,7 @@ public class ExecutionContext {
             // I didn't really want to pay for the sorting but not sure what else to do about right now.
             var associationMatchesArr = associationMatches.stream().mapToInt(i -> i).sorted().toArray();
 
+            // Because the arrays are ordered, we can do a zipper intersection.
             parent.matchingIndices = Util.zipperIntersection(parent.matchingIndices, associationMatchesArr);
         }
     }

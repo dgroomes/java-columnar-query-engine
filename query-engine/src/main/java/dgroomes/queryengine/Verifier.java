@@ -1,9 +1,9 @@
 package dgroomes.queryengine;
 
+import dgroomes.datamodel.AssociationColumn;
 import dgroomes.datamodel.Column;
 import dgroomes.datamodel.ColumnFilterable;
 import dgroomes.datamodel.Table;
-import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.queryapi.Criteria;
 import dgroomes.queryapi.Query;
 
@@ -99,7 +99,7 @@ public class Verifier {
                 var queryNode = entry.getValue();
                 Column column = currentExecutionNode.table.columns().get(ordinal);
 
-                if (!(column instanceof InMemoryColumn.AssociationColumn associationColumn)) {
+                if (!(column instanceof AssociationColumn associationColumn)) {
                     return new VerificationResult.IllegalQuery("The column at ordinal %d is not an association column. It is a %s".formatted(ordinal, column.getClass().getName()));
                 }
                 var childNode = currentExecutionNode.createChildNode(associationColumn);

@@ -120,6 +120,8 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
+* [ ] Use a BitSet instead of an integer array. This is way more efficient. This is the type of thing that I'm glad I
+  learned by doing this project.
 * [ ] Create a graph generic data structure? Or is this kind of pointless because all classes are actually graphs (
   fields to other objects are just edges to other vertices). My 'node' stuff was pretty haphazard is why I'm thinking
   this is interesting. Although it worked so nicely.
@@ -130,7 +132,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
   Eventually I want to do parallelization and that's going to take a lot of complexity budget.
   * DONE Scaffold out the modules: `data-model-api` and `data-model-in-memory`.
   * DONE Create concrete implementations of `Table` and `Column` in `data-model-in-memory`. This needs to be called from `:app`.
-  * IN PROGRESS Somehow abstract the Verifier away from the `data-model-in-memory`.
+  * DONE Somehow abstract the Verifier away from the `data-model-in-memory`.
     * DONE I think (vaguely, not really sure) I need a `TYPE` enum on `Column` to help the `Verifier` do its job.
     * DONE (ColumnFilterable interface) I'm going to try something else.
   * Somehow abstract all implementation details out of `query-engine`. It should just code to the API.
