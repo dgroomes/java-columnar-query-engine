@@ -4,10 +4,7 @@ import dgroomes.datamodel.Association;
 import dgroomes.datamodel.Column;
 import dgroomes.datamodel.Table;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 /**
@@ -103,36 +100,55 @@ public class InMemoryTable implements Table {
         };
     }
 
+    /**
+     * This method is designed to create the result set of the query. A subset of the original table is the result set.
+     */
     @Override
-    public Table subset(int[] indices) {
+    public Table subset(BitSet matchingRows) {
         var prunedColumns = columns.stream()
                 .<InMemoryColumn>map(column -> switch (column) {
                     case InMemoryColumn.BooleanColumn(var bools) -> {
-                        var pruned = new boolean[indices.length];
-                        for (int i = 0; i < indices.length; i++) {
-                            pruned[i] = bools[indices[i]];
+                        var pruned = new boolean[matchingRows.cardinality()];
+                        int j = 0;
+                        for (int i = 0; i < size(); i++) {
+                            if (!matchingRows.get(i)) continue;
+
+                            pruned[j] = bools[i];
+                            j++;
                         }
                         yield new InMemoryColumn.BooleanColumn(pruned);
                     }
                     case InMemoryColumn.IntegerColumn(var ints) -> {
-                        var pruned = new int[indices.length];
-                        for (int i = 0; i < indices.length; i++) {
-                            pruned[i] = ints[indices[i]];
+                        var pruned = new int[matchingRows.cardinality()];
+                        int j = 0;
+                        for (int i = 0; i < size(); i++) {
+                            if (!matchingRows.get(i)) continue;
+
+                            pruned[j] = ints[i];
+                            j++;
                         }
                         yield new InMemoryColumn.IntegerColumn(pruned);
                     }
                     case InMemoryColumn.StringColumn(var strings) -> {
-                        var pruned = new String[indices.length];
-                        for (int i = 0; i < indices.length; i++) {
-                            pruned[i] = strings[indices[i]];
+                        var pruned = new String[matchingRows.cardinality()];
+                        int j = 0;
+                        for (int i = 0; i < size(); i++) {
+                            if (!matchingRows.get(i)) continue;
+
+                            pruned[j] = strings[i];
+                            j++;
                         }
                         yield new InMemoryColumn.StringColumn(pruned);
                     }
                     case InMemoryColumn.AssociationColumn associationColumn -> {
                         var associations = associationColumn.associations;
-                        var pruned = new Association[indices.length];
-                        for (int i = 0; i < indices.length; i++) {
-                            pruned[i] = associations[indices[i]];
+                        var pruned = new Association[matchingRows.cardinality()];
+                        int j = 0;
+                        for (int i = 0; i < size(); i++) {
+                            if (!matchingRows.get(i)) continue;
+
+                            pruned[j] = associations[i];
+                            j++;
                         }
                         yield new InMemoryColumn.AssociationColumn(associationColumn.associatedEntity, pruned);
                     }

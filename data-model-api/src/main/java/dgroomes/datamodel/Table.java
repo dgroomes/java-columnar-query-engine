@@ -1,5 +1,6 @@
 package dgroomes.datamodel;
 
+import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -30,5 +31,5 @@ public interface Table {
     /**
      * Produce a {@link Table} that is a subset of the current table given by the indices.
      */
-    Table subset(int[] indices);
+    Table subset(BitSet matchingRows);
 }

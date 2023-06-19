@@ -3,11 +3,12 @@ package dgroomes.queryengine;
 import dgroomes.datamodel.Association;
 import dgroomes.datamodel.AssociationColumn;
 import dgroomes.datamodel.Table;
-import dgroomes.util.Util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.IntPredicate;
-import java.util.stream.IntStream;
 
 /**
  * A verified and stateful representation of a query and its execution state.
@@ -20,10 +21,10 @@ import java.util.stream.IntStream;
 public class ExecutionContext {
 
     /**
-     * When the matching phase is complete, the root node's indices can be taken as the final matching indices.
+     * When the matching phase is complete, the root node's matching rows can be taken as the final matching rows.
      */
-    public int[] matchingIndices() {
-        return rootNode.matchingIndices;
+    public BitSet matchingRows() {
+        return rootNode.matchingBits;
     }
 
     /**
@@ -37,7 +38,8 @@ public class ExecutionContext {
 
         private final List<IntPredicate> columnPredicates = new ArrayList<>();
         final Table table;
-        private int[] matchingIndices;
+        private final BitSet matchingBits;
+
         final Node parent;
         private final AssociationColumn associationToParent;
 
@@ -51,10 +53,7 @@ public class ExecutionContext {
             this.table = table;
             this.parent = parent;
             this.associationToParent = associationToParent;
-
-            // We start with the assumption that all values in the column match. This is indeed a wasteful allocation
-            // but this is the model we have for now.
-            matchingIndices = IntStream.range(0, table.size()).toArray();
+            this.matchingBits = new BitSet(table.size());
         }
 
         public void addColumnPredicate(IntPredicate columnPredicate) {
@@ -76,44 +75,49 @@ public class ExecutionContext {
          * The filter method is designed to be called exactly once. There may be multiple passes of "association filters"
          * based on the result of other nodes.
          */
-        public void filter() {
+        public void filterSelf() {
+            // Combine all the predicates using the convenient "and" method.
             Optional<IntPredicate> combinedPredicateOpt = columnPredicates.stream().reduce(IntPredicate::and);
-            if (combinedPredicateOpt.isEmpty()) return;
+
+            if (combinedPredicateOpt.isEmpty()) {
+                // When there are no predicates, there is no specific filtering work to do. Technically, all rows match.
+                matchingBits.set(0, table.size());
+                return;
+            }
 
             var combinedPredicate = combinedPredicateOpt.get();
-            matchingIndices = Arrays.stream(matchingIndices)
-                    .filter(combinedPredicate)
-                    .toArray();
+
+            for (int i = 0; i < table.size(); i++) {
+                if (combinedPredicate.test(i)) matchingBits.set(i);
+            }
         }
 
         /**
-         * This is an "upwards" filter. This method narrows that parent node's matching indices to the rows of the
+         * This is an "upwards" filter. This method narrows that parent node's matching bits to the rows of the
          * parent that are associated from rows in the current node.
          */
         public void filterParent() {
             if (parent == null) return; // The root node is the only node without a parent.
 
-            // This represents indices *of the parent* that are pointed to by *live rows* of the current node.
-            var associationMatches = new HashSet<Integer>();
+            var parentMatchingBitsByAssociation = new BitSet(parent.table.size());
 
-            var EMPTY = new int[0];
-            for (int i : matchingIndices) {
-                Association reverseAssociation = associationToParent.associationsForIndex(i);
-                var toAdd = switch (reverseAssociation) {
-                    case Association.Many(var indices) -> indices;
-                    case Association.One(var index) -> new int[]{index};
-                    case Association.None ignored -> EMPTY;
-                };
-                for (int toAddI : toAdd) {
-                    associationMatches.add(toAddI);
+            for (int i = 0; i < table.size(); i++) {
+                if (!matchingBits.get(i)) continue;
+
+                Association upwardsAssociation = associationToParent.associationsForIndex(i);
+
+                switch (upwardsAssociation) {
+                    case Association.Many(var indices) -> {
+                        for (int index : indices) parentMatchingBitsByAssociation.set(index);
+                    }
+                    case Association.One(var index) -> parentMatchingBitsByAssociation.set(index);
+                    case Association.None ignored -> {
+                        // No-op
+                    }
                 }
             }
 
-            // I didn't really want to pay for the sorting but not sure what else to do about right now.
-            var associationMatchesArr = associationMatches.stream().mapToInt(i -> i).sorted().toArray();
-
-            // Because the arrays are ordered, we can do a zipper intersection.
-            parent.matchingIndices = Util.zipperIntersection(parent.matchingIndices, associationMatchesArr);
+            parent.matchingBits.and(parentMatchingBitsByAssociation);
         }
     }
 

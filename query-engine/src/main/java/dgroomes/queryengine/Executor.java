@@ -61,11 +61,12 @@ public class Executor {
         // root. Do this for each leaf.
         Deque<ExecutionContext.Node> leaves = new ArrayDeque<>();
 
-        // Let's find the leaf nodes
+        // Let's find the leaf nodes. In the same loop, we also apply 'self' filtering on each node.
         Deque<ExecutionContext.Node> nodes = new ArrayDeque<>();
         nodes.push(executionContext.rootNode);
         while (!nodes.isEmpty()) {
             ExecutionContext.Node node = nodes.pop();
+            node.filterSelf();
             List<ExecutionContext.Node> childNodes = node.childNodes();
             if (childNodes.isEmpty()) {
                 leaves.push(node);
@@ -74,16 +75,16 @@ public class Executor {
             }
         }
 
+        // Filter upwards from the leaves, via associations.
         while (!leaves.isEmpty()) {
             ExecutionContext.Node leaf = leaves.pop();
-            leaf.filter();
             leaf.filterParent();
             ExecutionContext.Node parent = leaf.parent;
             if (parent != null) leaves.push(parent);
         }
 
         // Prune the table down to the rows at the matching indices This represents the final "result set" of the query.
-        Table subset = table.subset(executionContext.matchingIndices());
+        Table subset = table.subset(executionContext.matchingRows());
         return new QueryResult.Success(subset);
     }
 

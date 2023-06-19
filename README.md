@@ -118,7 +118,7 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [ ] Use a BitSet instead of an integer array. This is way more efficient. This is the type of thing that I'm glad I
+* [x] DONE Use a BitSet instead of an integer array. This is way more efficient. This is the type of thing that I'm glad I
   learned by doing this project.
 * [ ] Create a graph generic data structure? Or is this kind of pointless because all classes are actually graphs (
   fields to other objects are just edges to other vertices). My 'node' stuff was pretty haphazard is why I'm thinking
