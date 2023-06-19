@@ -118,28 +118,23 @@ Follow these instructions to build and run the example program:
 
 General clean-ups, TODOs and things I wish to implement for this project:
 
-* [x] DONE Use a BitSet instead of an integer array. This is way more efficient. This is the type of thing that I'm glad I
-  learned by doing this project.
-* [ ] Create a graph generic data structure? Or is this kind of pointless because all classes are actually graphs (
-  fields to other objects are just edges to other vertices). My 'node' stuff was pretty haphazard is why I'm thinking
-  this is interesting. Although it worked so nicely.
-* [ ] Create a parellel query engine. Parallelization would be cool, and it's just a natural thing to do with data
-  workloads like this. Note to self: create a new module for this. I think creating more layers of abstraction within
-  `query-engine` to accommodate different behavior will not scale well. It's ok to just re-implement some things for the
-  sake of decoupling, interpretability, execution speed, and development speed. Thinking more widely, I even want to
-  just use SQLite, DuckDB etc as a form of a "query engine" and be able to benchmark the same workload between my query
-  engine (and in-memory column model).  
-* [x] DONE The 'query-engine' should maybe just be an execution strategy? I really need a separate API for the data model and
-  the physical implementation I think. I'm treating `Table` and `Column` as physical but those should be interfaces.
-  Maybe a module `data-model-api` and then `data-model-in-memory`? I don't care much about the feature set of the
-  physical impl and API but I do care about thinning out query-engine to help me focus on the query execution strategy.
-  Eventually I want to do parallelization and that's going to take a lot of complexity budget.
-  * DONE Scaffold out the modules: `data-model-api` and `data-model-in-memory`.
-  * DONE Create concrete implementations of `Table` and `Column` in `data-model-in-memory`. This needs to be called from `:app`.
-  * DONE Somehow abstract the Verifier away from the `data-model-in-memory`.
-    * DONE I think (vaguely, not really sure) I need a `TYPE` enum on `Column` to help the `Verifier` do its job.
-    * DONE (ColumnFilterable interface) I'm going to try something else.
-  * DONE Somehow abstract all implementation details out of `query-engine`. It should just code to the API.
+* [ ] Create a parallel query engine. Parallelization would be cool, and it's just a natural thing to do with data
+  workloads like this.
+* [ ] Package `query-engine` as a non-special implementation of `query-api`. `query-engine` is a "serial, indices-tracking
+  query execution strategy" that implements the main query API. The overarching query API is this method signature:
+  `QueryResult match(Query query, Table table)`. There can be multiple different query engine implementations, like a
+  parallel one, one that tracks statistics and has heuristics, one for readability and trying new features. I think 
+  creating more layers of abstraction within `query-engine` to accommodate different behavior will not scale well. It's
+  ok to just re-implement some things for the sake of decoupling, interpretability, execution speed, and development
+  speed. Thinking more widely, I even want to just use SQLite, DuckDB etc as a form of a "query engine" and be able to
+  benchmark the same workload between my query engine (and in-memory column model).  
+   * Move `QueryResult match(Query query, Table table)` to `query-api`.
+   * Update docs as appropriate.
+   * Plan future work like a test fixture (harness?) that defines the functional tests but does not code to a specific
+     implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection (does JUnit5 have
+     a good fit for this? Or, just do something plain old like a template method pattern) to allow the test to be
+     implemented by different query engines (e.g. `query-engine-serial` vs `query-engine-parallel`) AND different data
+     model implementations (e.g. `data-model-arrays` vs `data-model-arrow` vs `data-model-foreign-memory`).
 * [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
@@ -148,12 +143,6 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [ ] (stretch) Consider splitting apart a query verifier (UPDATE: the verifier is implemented) from a query planner from a query executor (and maybe even a query
   optimizer but I don't think I care to do that). I'm already finding that there is too much verification logic in the
   engine code which I'd rather be used just for execution.
-* [ ] Consider modelling a `Column` API so that the backing datastore can be swapped out. For example, I'm starting with
-  simple arrays but I want to use compressed data structures using something like JavaFastPFOR and I might want to use the
-  foreign memory API if I figure out that that's the best way to ensure that the data is laid out compactly (plus I want
-  to learn the API).
-* [ ] SKIP (I agree with my comment in this item: I'm not sure I'm going to sub-type Table.) Generic type parameters should work on the 'match' method. It takes a table and returns table of the exact same
-  type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
 * [ ] (cosmetic) Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
 * [ ] (cosmetic) Criteria/criterion language. Consider it. singular/plural. I don't care much.
 * [ ] (stretch) Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.
@@ -250,3 +239,18 @@ General clean-ups, TODOs and things I wish to implement for this project:
   * DONE Extract some common methods
   * DONE Be consistent about a 'result set' return type. Combine it with the final "prune" operation.
   * What else?
+* [x] DONE Use a BitSet instead of an integer array. This is way more efficient. This is the type of thing that I'm glad I
+  learned by doing this project.
+* [x] DONE The 'query-engine' should maybe just be an execution strategy? I really need a separate API for the data model and
+  the physical implementation I think. I'm treating `Table` and `Column` as physical but those should be interfaces.
+  Maybe a module `data-model-api` and then `data-model-in-memory`? I don't care much about the feature set of the
+  physical impl and API but I do care about thinning out query-engine to help me focus on the query execution strategy.
+  Eventually I want to do parallelization and that's going to take a lot of complexity budget.
+  * DONE Scaffold out the modules: `data-model-api` and `data-model-in-memory`.
+  * DONE Create concrete implementations of `Table` and `Column` in `data-model-in-memory`. This needs to be called from `:app`.
+  * DONE Somehow abstract the Verifier away from the `data-model-in-memory`.
+    * DONE I think (vaguely, not really sure) I need a `TYPE` enum on `Column` to help the `Verifier` do its job.
+    * DONE (ColumnFilterable interface) I'm going to try something else.
+  * DONE Somehow abstract all implementation details out of `query-engine`. It should just code to the API.
+* [ ] SKIP (I agree with my comment in this item: I'm not sure I'm going to sub-type Table.) Generic type parameters should work on the 'match' method. It takes a table and returns table of the exact same
+  type. Not sure this is worth doing because I'm not sure I'm going to sub-type Table? I mean maybe.
