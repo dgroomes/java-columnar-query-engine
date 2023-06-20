@@ -1,6 +1,9 @@
 package dgroomes.app;
 
 import dgroomes.datasystem.Association;
+import dgroomes.datasystem.Criteria;
+import dgroomes.datasystem.Query;
+import dgroomes.datasystem.QueryResult;
 import dgroomes.geography.City;
 import dgroomes.geography.GeographyGraph;
 import dgroomes.geography.State;
@@ -9,8 +12,6 @@ import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.inmemory.InMemoryTable;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
-import dgroomes.datasystem.Criteria;
-import dgroomes.datasystem.Query;
 import dgroomes.queryengine.Executor;
 import dgroomes.util.Util;
 import org.slf4j.Logger;
@@ -231,17 +232,17 @@ public class Runner {
                     .addCriteria(new Criteria.StringCriteria(0, "PLYMOUTH"::equals)); // Column 0 is the string column of city names.
 
             Executor executor = new Executor();
-            Executor.QueryResult queryResult = executor.match(query, zipsTable);
+            QueryResult queryResult = executor.match(query, zipsTable);
 
             switch (queryResult) {
-                case Executor.QueryResult.Success(var resultSet) -> {
+                case QueryResult.Success(var resultSet) -> {
                     int matches = resultSet.size();
                     var matchingZipCodes = (InMemoryColumn.IntegerColumn) resultSet.columns().get(0);
                     var count = Util.formatInteger(matches);
                     var zipsStr = Arrays.toString(matchingZipCodes.ints());
                     log.info("{} ZIP codes have a population around 10,000 and are adjacent to a state that has a city named 'Plymouth': {}", count, zipsStr);
                 }
-                case Executor.QueryResult.Failure(var msg) -> log.error(msg);
+                case QueryResult.Failure(var msg) -> log.error(msg);
             }
         }
 
@@ -255,17 +256,17 @@ public class Runner {
                     .addCriteria(new Criteria.StringCriteria(1, s -> s.contains("North")));
 
             Executor executor = new Executor();
-            Executor.QueryResult queryResult = executor.match(query, statesTable);
+            QueryResult queryResult = executor.match(query, statesTable);
 
             switch (queryResult) {
-                case Executor.QueryResult.Success(var resultSet) -> {
+                case QueryResult.Success(var resultSet) -> {
                     int matches = resultSet.size();
                     var matchingStateNamesColumn = (InMemoryColumn.StringColumn) resultSet.columns().get(1);
                     var count = Util.formatInteger(matches);
                     var names = Arrays.toString(matchingStateNamesColumn.strings());
                     log.info("{} states have 'North' in their name and are adjacent to states with 'South' in their name which are adjacent to states with 'North' in their name (yes this is totally redundant!): {}", count, names);
                 }
-                case Executor.QueryResult.Failure(var msg) -> log.error(msg);
+                case QueryResult.Failure(var msg) -> log.error(msg);
             }
         }
     }

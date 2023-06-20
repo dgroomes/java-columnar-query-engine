@@ -1,14 +1,10 @@
 package dgroomes.queryengine;
 
-import dgroomes.datasystem.Association;
-import dgroomes.datasystem.Column;
+import dgroomes.datasystem.*;
+import dgroomes.datasystem.QueryResult.Failure;
+import dgroomes.datasystem.QueryResult.Success;
 import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.inmemory.InMemoryColumn.StringColumn;
-import dgroomes.datasystem.Criteria;
-import dgroomes.datasystem.Query;
-import dgroomes.queryengine.Executor.QueryResult;
-import dgroomes.queryengine.Executor.QueryResult.Failure;
-import dgroomes.queryengine.Executor.QueryResult.Success;
 import org.junit.jupiter.api.Test;
 
 import static dgroomes.inmemory.InMemoryColumn.ofInts;

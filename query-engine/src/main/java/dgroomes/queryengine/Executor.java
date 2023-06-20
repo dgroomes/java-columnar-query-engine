@@ -1,7 +1,9 @@
 package dgroomes.queryengine;
 
-import dgroomes.datasystem.Table;
+import dgroomes.datasystem.DataSystem;
 import dgroomes.datasystem.Query;
+import dgroomes.datasystem.QueryResult;
+import dgroomes.datasystem.Table;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -12,7 +14,7 @@ import java.util.Objects;
  * This is a toy pattern matching query engine (like the 'cypher' query language). It does not do aggregations.
  * There is no query "language" and instead it's just a Java API.
  */
-public class Executor {
+public class Executor implements DataSystem {
 
     public final Verifier verifier;
 
@@ -41,6 +43,7 @@ public class Executor {
      * <p>
      * I don't care much about generics here. I just want to get something working.
      */
+    @Override
     public QueryResult match(Query query, Table table) {
         Objects.requireNonNull(query, "The 'query' argument must not be null");
         Objects.requireNonNull(table, "The 'table' argument must not be null");
@@ -86,13 +89,5 @@ public class Executor {
         // Prune the table down to the rows at the matching indices This represents the final "result set" of the query.
         Table subset = table.subset(executionContext.matchingRows());
         return new QueryResult.Success(subset);
-    }
-
-    public sealed interface QueryResult permits QueryResult.Success, QueryResult.Failure {
-        record Success(Table resultSet) implements QueryResult {
-        }
-
-        record Failure(String message) implements QueryResult {
-        }
     }
 }

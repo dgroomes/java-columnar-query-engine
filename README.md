@@ -121,7 +121,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
 
 * [ ] Create a parallel query engine. Parallelization would be cool, and it's just a natural thing to do with data
   workloads like this.
-* [ ] IN PROGRESS Re-package `query-engine`. I want a `data-engine` module which is an API implemented by `query-engine`. `query-engine` is a "serial, indices-tracking
+* [ ] IN PROGRESS Re-package `query-engine`. I want a `data-system` module which is an API implemented by `query-engine`. `query-engine` is a "serial, indices-tracking
   query execution strategy" that implements the main database API. The overarching query API is this method signature:
   `QueryResult match(Query query, Table table)`. There can be multiple different query engine implementations, like a
   parallel one, one that tracks statistics and has heuristics, one for readability and trying new features. I think 
@@ -129,9 +129,10 @@ General clean-ups, TODOs and things I wish to implement for this project:
   ok to just re-implement some things for the sake of decoupling, interpretability, execution speed, and development
   speed. Thinking more widely, I even want to just use SQLite, DuckDB etc as a form of a "query engine" and be able to
   benchmark the same workload between my query engine (and in-memory column model).
-   * IN PROGRESS Create `data-engine` (it is purposely not called "database" because it is far from a database. A database supports
+   * DONE Create `data-system` (it is purposely not called "database" because it is far from a database. A database supports
      writes and is durable and has more features. This is more like a "query engine for ephemeral data").
-   * Move `QueryResult match(Query query, Table table)` out of `Executor` and into `data-system`.
+   * DONE Move `QueryResult match(Query query, Table table)` out of `Executor` and into `data-system`.
+   * Rename `query-engine` to something like `data-system-serial-indices` ...
    * Update docs as appropriate.
    * Plan future work like a test fixture (harness?) that defines the functional tests but does not code to a specific
      implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection (does JUnit5 have
