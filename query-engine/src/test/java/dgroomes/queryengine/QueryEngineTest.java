@@ -1,11 +1,11 @@
 package dgroomes.queryengine;
 
-import dgroomes.datamodel.Association;
-import dgroomes.datamodel.Column;
+import dgroomes.datasystem.Association;
+import dgroomes.datasystem.Column;
 import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.inmemory.InMemoryColumn.StringColumn;
-import dgroomes.queryapi.Criteria;
-import dgroomes.queryapi.Query;
+import dgroomes.datasystem.Criteria;
+import dgroomes.datasystem.Query;
 import dgroomes.queryengine.Executor.QueryResult;
 import dgroomes.queryengine.Executor.QueryResult.Failure;
 import dgroomes.queryengine.Executor.QueryResult.Success;

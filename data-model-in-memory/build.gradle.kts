@@ -5,5 +5,5 @@ plugins {
 
 dependencies {
     implementation(project(":util"))
-    api(project(":data-model-api"))
+    api(project(":data-system"))
 }

@@ -1,4 +1,4 @@
-package dgroomes.datamodel;
+package dgroomes.datasystem;
 
 public interface AssociationColumn extends Column {
 

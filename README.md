@@ -63,12 +63,13 @@ Simple requirements. That allows the focus to be on the implementation.
 
 The code is implemented across a few modules:
 
-* `query-engine`
-  * This module is the actual query engine. It's the most interesting module. 
-* `query-api`
-  * The API for expressing queries. This might change. I'm not sure.
-* `data-model-api`
-  * This defines the core interfaces of tables, columns and associations. 
+* `data-system`
+  * This module describes the API of the "read-only object datastore and query engine". It also defines the core
+    interfaces of tables, columns and associations. A data system is characterized by its physical data strategy (e.g.
+    a columnar SQL database) and its query execution strategy.
+* `data-system-serial-indices`
+  * This module is an implementation of a data system. It is characterized by a serial-style (non-parallel) and indices-
+    tracking execution strategy. This is the most interesting module. 
 * `data-model-in-memory`
   * This module is a concrete implementation of the data model API using in-memory data structures (i.e. no file IO).
 * `geography`
@@ -120,15 +121,17 @@ General clean-ups, TODOs and things I wish to implement for this project:
 
 * [ ] Create a parallel query engine. Parallelization would be cool, and it's just a natural thing to do with data
   workloads like this.
-* [ ] Package `query-engine` as a non-special implementation of `query-api`. `query-engine` is a "serial, indices-tracking
-  query execution strategy" that implements the main query API. The overarching query API is this method signature:
+* [ ] IN PROGRESS Re-package `query-engine`. I want a `data-engine` module which is an API implemented by `query-engine`. `query-engine` is a "serial, indices-tracking
+  query execution strategy" that implements the main database API. The overarching query API is this method signature:
   `QueryResult match(Query query, Table table)`. There can be multiple different query engine implementations, like a
   parallel one, one that tracks statistics and has heuristics, one for readability and trying new features. I think 
   creating more layers of abstraction within `query-engine` to accommodate different behavior will not scale well. It's
   ok to just re-implement some things for the sake of decoupling, interpretability, execution speed, and development
   speed. Thinking more widely, I even want to just use SQLite, DuckDB etc as a form of a "query engine" and be able to
-  benchmark the same workload between my query engine (and in-memory column model).  
-   * Move `QueryResult match(Query query, Table table)` to `query-api`.
+  benchmark the same workload between my query engine (and in-memory column model).
+   * IN PROGRESS Create `data-engine` (it is purposely not called "database" because it is far from a database. A database supports
+     writes and is durable and has more features. This is more like a "query engine for ephemeral data").
+   * Move `QueryResult match(Query query, Table table)` out of `Executor` and into `data-system`.
    * Update docs as appropriate.
    * Plan future work like a test fixture (harness?) that defines the functional tests but does not code to a specific
      implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection (does JUnit5 have

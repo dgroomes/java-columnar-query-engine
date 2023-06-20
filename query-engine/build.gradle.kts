@@ -5,8 +5,7 @@ plugins {
 
 dependencies {
     implementation(project(":util"))
-    api(project(":query-api"))
-    api(project(":data-model-api"))
+    api(project(":data-system"))
 
     // The 'data-model-in-memory' module can be used as a test dependency but not as a main dependency.
     testImplementation(project(":data-model-in-memory"))

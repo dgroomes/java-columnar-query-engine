@@ -1,11 +1,11 @@
 package dgroomes.queryengine;
 
-import dgroomes.datamodel.AssociationColumn;
-import dgroomes.datamodel.Column;
-import dgroomes.datamodel.ColumnFilterable;
-import dgroomes.datamodel.Table;
-import dgroomes.queryapi.Criteria;
-import dgroomes.queryapi.Query;
+import dgroomes.datasystem.AssociationColumn;
+import dgroomes.datasystem.Column;
+import dgroomes.datasystem.ColumnFilterable;
+import dgroomes.datasystem.Table;
+import dgroomes.datasystem.Criteria;
+import dgroomes.datasystem.Query;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -16,7 +16,7 @@ import java.util.function.IntPredicate;
 /**
  * A query verifier (or at least, my naive guess at what a query verifier is. Is this a linker? A compiler?).
  * <p>
- * We want to take a {@link dgroomes.queryapi.Criteria} and create an "execution context" from it. This is a
+ * We want to take a {@link Criteria} and create an "execution context" from it. This is a
  * graph that is a physical representation of the query execution process. It incorporates tables as nodes.
  */
 public class Verifier {

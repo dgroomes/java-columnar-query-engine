@@ -1,4 +1,4 @@
-package dgroomes.datamodel;
+package dgroomes.datasystem;
 
 import java.util.BitSet;
 import java.util.List;

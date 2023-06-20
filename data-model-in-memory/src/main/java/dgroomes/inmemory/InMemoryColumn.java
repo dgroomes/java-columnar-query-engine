@@ -1,6 +1,6 @@
 package dgroomes.inmemory;
 
-import dgroomes.datamodel.*;
+import dgroomes.datasystem.*;
 
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
@@ -82,7 +82,7 @@ sealed public interface InMemoryColumn extends Column {
     // Note: maybe modelling an association as a column of the entity is a bad idea. After all, the association is
     // usually goes both ways (bi-directional) in meaning. For example, a city is contained in a state and that state
     // also contains the city. There is a case for uni-directional associations, but I'm not there right now.
-    final class AssociationColumn implements InMemoryColumn, dgroomes.datamodel.AssociationColumn, ColumnFilterable.AssociationColumnFilterable {
+    final class AssociationColumn implements InMemoryColumn, dgroomes.datasystem.AssociationColumn, ColumnFilterable.AssociationColumnFilterable {
 
         public final Table associatedEntity;
         public final Association[] associations;

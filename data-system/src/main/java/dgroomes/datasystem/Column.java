@@ -1,4 +1,4 @@
-package dgroomes.datamodel;
+package dgroomes.datasystem;
 
 /**
  * This is a core type. The {@link Column} type represents a column in a table.

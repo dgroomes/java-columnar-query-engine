@@ -1,4 +1,4 @@
-package dgroomes.queryapi;
+package dgroomes.datasystem;
 
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;

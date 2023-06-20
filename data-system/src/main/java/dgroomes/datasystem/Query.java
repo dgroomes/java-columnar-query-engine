@@ -1,4 +1,4 @@
-package dgroomes.queryapi;
+package dgroomes.datasystem;
 
 import java.util.ArrayList;
 import java.util.HashMap;

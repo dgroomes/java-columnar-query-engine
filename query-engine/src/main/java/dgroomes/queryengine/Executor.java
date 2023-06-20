@@ -1,7 +1,7 @@
 package dgroomes.queryengine;
 
-import dgroomes.datamodel.Table;
-import dgroomes.queryapi.Query;
+import dgroomes.datasystem.Table;
+import dgroomes.datasystem.Query;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

@@ -1,4 +1,4 @@
 module dgroomes.inmemory {
-    requires dgroomes.datamodel;
+    requires dgroomes.datasystem;
     exports dgroomes.inmemory;
 }

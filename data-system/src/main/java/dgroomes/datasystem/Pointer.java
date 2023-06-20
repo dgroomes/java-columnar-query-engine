@@ -1,4 +1,4 @@
-package dgroomes.queryapi;
+package dgroomes.datasystem;
 
 sealed public interface Pointer {
     record Ordinal(int ordinal) implements Pointer {}

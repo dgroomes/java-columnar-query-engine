@@ -1,6 +1,6 @@
 package dgroomes.app;
 
-import dgroomes.datamodel.Association;
+import dgroomes.datasystem.Association;
 import dgroomes.geography.City;
 import dgroomes.geography.GeographyGraph;
 import dgroomes.geography.State;
@@ -9,8 +9,8 @@ import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.inmemory.InMemoryTable;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
-import dgroomes.queryapi.Criteria;
-import dgroomes.queryapi.Query;
+import dgroomes.datasystem.Criteria;
+import dgroomes.datasystem.Query;
 import dgroomes.queryengine.Executor;
 import dgroomes.util.Util;
 import org.slf4j.Logger;

@@ -1,8 +1,9 @@
 package dgroomes.queryengine;
 
-import dgroomes.datamodel.Association;
-import dgroomes.datamodel.AssociationColumn;
-import dgroomes.datamodel.Table;
+import dgroomes.datasystem.Association;
+import dgroomes.datasystem.AssociationColumn;
+import dgroomes.datasystem.Criteria;
+import dgroomes.datasystem.Table;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -13,7 +14,7 @@ import java.util.function.IntPredicate;
 /**
  * A verified and stateful representation of a query and its execution state.
  * <p>
- * This type comes after the {@link dgroomes.queryapi.Criteria} and before the {@link dgroomes.queryengine.Executor.QueryResult}.
+ * This type comes after the {@link Criteria} and before the {@link dgroomes.queryengine.Executor.QueryResult}.
  * I tried to get leverage from features like sealed classes, records and features like "pattern matching for switch"
  * I've struggled. In some cases, light usage of these things was helpful. But in other cases, I got mired in a rigid
  * type hierarchy and can rarely get exhaustive switches to fit.
