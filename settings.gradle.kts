@@ -4,7 +4,7 @@ include(
     ":app",
     ":data-model-in-memory",
     ":data-system",
+    ":data-system-serial-indices",
     ":geography",
     ":geography-loader",
-    ":query-engine",
     ":util")

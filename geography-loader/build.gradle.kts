@@ -8,6 +8,6 @@ dependencies {
     implementation(platform(libs.jackson.bom))
     implementation(libs.jackson.databind)
     api(project(":geography"))
-    api(project(":query-engine"))
+    api(project(":data-system-serial-indices"))
     implementation(project(":util"))
 }

@@ -132,7 +132,7 @@ General clean-ups, TODOs and things I wish to implement for this project:
    * DONE Create `data-system` (it is purposely not called "database" because it is far from a database. A database supports
      writes and is durable and has more features. This is more like a "query engine for ephemeral data").
    * DONE Move `QueryResult match(Query query, Table table)` out of `Executor` and into `data-system`.
-   * Rename `query-engine` to something like `data-system-serial-indices` ...
+   * IN PROGRESS Rename `query-engine` to something like `data-system-serial-indices` ... and follow-on renames like classes.
    * Update docs as appropriate.
    * Plan future work like a test fixture (harness?) that defines the functional tests but does not code to a specific
      implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection (does JUnit5 have

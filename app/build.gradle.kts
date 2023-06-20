@@ -9,7 +9,7 @@ dependencies {
     implementation(project(":geography-loader"))
     implementation(project(":util"))
     implementation(project(":data-model-in-memory"))
-    implementation(project(":query-engine"))
+    implementation(project(":data-system-serial-indices"))
 
     testImplementation(libs.assertj)
     testImplementation(libs.junit.jupiter.api)
