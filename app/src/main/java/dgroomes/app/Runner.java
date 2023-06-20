@@ -12,7 +12,7 @@ import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.inmemory.InMemoryTable;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
-import dgroomes.queryengine.Executor;
+import dgroomes.queryengine.DataSystemSerialIndices;
 import dgroomes.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -231,8 +231,8 @@ public class Runner {
                     .createChild(2) // Column 2 is the association column to cities.
                     .addCriteria(new Criteria.StringCriteria(0, "PLYMOUTH"::equals)); // Column 0 is the string column of city names.
 
-            Executor executor = new Executor();
-            QueryResult queryResult = executor.match(query, zipsTable);
+            var dataSystem = new DataSystemSerialIndices();
+            QueryResult queryResult = dataSystem.execute(query, zipsTable);
 
             switch (queryResult) {
                 case QueryResult.Success(var resultSet) -> {
@@ -255,8 +255,8 @@ public class Runner {
                     .createChild(3)
                     .addCriteria(new Criteria.StringCriteria(1, s -> s.contains("North")));
 
-            Executor executor = new Executor();
-            QueryResult queryResult = executor.match(query, statesTable);
+            var dataSystem = new DataSystemSerialIndices();
+            QueryResult queryResult = dataSystem.execute(query, statesTable);
 
             switch (queryResult) {
                 case QueryResult.Success(var resultSet) -> {

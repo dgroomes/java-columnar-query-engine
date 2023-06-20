@@ -20,9 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Note: maybe consider creating a AssertJ extensions to make the test code more palatable. It's quite verbose. But also
  * consider if that's overkill.
  */
-public class QueryEngineTest {
+public class QueryTest {
 
-    private final Executor executor = new Executor();
+    private final DataSystemSerialIndices dataSystem = new DataSystemSerialIndices();
 
     /**
      * Ordinal integer query over a single-column table.
@@ -35,7 +35,7 @@ public class QueryEngineTest {
         query.rootNode.addCriteria(new Criteria.IntCriteria(0, i1 -> i1 > 0));
 
         // Act
-        QueryResult result = executor.match(query, table);
+        QueryResult result = dataSystem.execute(query, table);
 
         // Assert
         var columns = switch (result) {
@@ -80,7 +80,7 @@ public class QueryEngineTest {
         query.rootNode.addCriteria(new Criteria.IntCriteria(1, pop -> pop > 100_000 && pop < 150_000));
 
         // Act
-        QueryResult result = executor.match(query, table);
+        QueryResult result = dataSystem.execute(query, table);
 
         // Assert
         var columns = switch (result) {
@@ -115,7 +115,7 @@ public class QueryEngineTest {
                 .addCriteria(new Criteria.StringCriteria(0, s -> s.compareTo("d") < 0));
 
         // Act
-        QueryResult result = executor.match(query, table);
+        QueryResult result = dataSystem.execute(query, table);
 
         // Assert
         var columns = switch (result) {
@@ -157,7 +157,7 @@ public class QueryEngineTest {
             statesNode.addCriteria(new Criteria.StringCriteria(0, "South Dakota"::equals));
 
             // Act
-            QueryResult result = executor.match(query, cities);
+            QueryResult result = dataSystem.execute(query, cities);
 
             // Assert
             var columns = switch (result) {
@@ -182,7 +182,7 @@ public class QueryEngineTest {
             statesNode.addCriteria(new Criteria.StringCriteria(0, "Minnesota"::equals));
 
             // Act
-            QueryResult result = executor.match(query, cities);
+            QueryResult result = dataSystem.execute(query, cities);
 
             // Assert
             var columns = switch (result) {
@@ -292,7 +292,7 @@ public class QueryEngineTest {
                 .addCriteria(new Criteria.StringCriteria(1, "ferns"::equals));
 
         // Act
-        QueryResult result = executor.match(query, sections);
+        QueryResult result = dataSystem.execute(query, sections);
 
         // Assert
         var columns = switch (result) {

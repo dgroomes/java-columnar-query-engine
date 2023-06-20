@@ -132,7 +132,16 @@ General clean-ups, TODOs and things I wish to implement for this project:
    * DONE Create `data-system` (it is purposely not called "database" because it is far from a database. A database supports
      writes and is durable and has more features. This is more like a "query engine for ephemeral data").
    * DONE Move `QueryResult match(Query query, Table table)` out of `Executor` and into `data-system`.
-   * IN PROGRESS Rename `query-engine` to something like `data-system-serial-indices` ... and follow-on renames like classes.
+   * DONE Rename `query-engine` to something like `data-system-serial-indices` ... and follow-on renames like classes.
+   * The data system should encapsulate the table. The API should become `QueryResult match(Query query)`. While it is
+     convenient to allow the caller to inject their own physical data model (e.g. `InMemoryTable` in this case), that
+     should be encapsulated by the data system (see the earlier language I used to describe a data system). And actually
+     `data-system-serial-indices` should really be `data-system-serial-indices-arrays` which makes way for things like
+     `data-system-serial-indices-arrow` and `data-system-serial-indices-foreign-memory`. I actually want to extract the
+     common "indices-" query engine again... but anyway this is progress. It's imporant that the data system encapsulates
+     the physical data because that makes it possible for a substantially different query engine to code to its
+     substantially and necessarily different physical data model. For example, Neo4J (Cypher engine and vertices/edges
+     data model)
    * Update docs as appropriate.
    * Plan future work like a test fixture (harness?) that defines the functional tests but does not code to a specific
      implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection (does JUnit5 have

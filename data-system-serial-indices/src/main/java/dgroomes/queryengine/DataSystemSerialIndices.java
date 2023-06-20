@@ -11,14 +11,14 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This is a toy pattern matching query engine (like the 'cypher' query language). It does not do aggregations.
- * There is no query "language" and instead it's just a Java API.
+ * An implementation of a {@link DataSystem} that is characterized by a serial execution strategy which relies on
+ * tracking matching indices with {@link java.util.BitSet} data structures.
  */
-public class Executor implements DataSystem {
+public class DataSystemSerialIndices implements DataSystem {
 
     public final Verifier verifier;
 
-    public Executor() {
+    public DataSystemSerialIndices() {
         verifier = new Verifier();
     }
 
@@ -44,7 +44,7 @@ public class Executor implements DataSystem {
      * I don't care much about generics here. I just want to get something working.
      */
     @Override
-    public QueryResult match(Query query, Table table) {
+    public QueryResult execute(Query query, Table table) {
         Objects.requireNonNull(query, "The 'query' argument must not be null");
         Objects.requireNonNull(table, "The 'table' argument must not be null");
 
