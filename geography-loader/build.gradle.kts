@@ -8,6 +8,6 @@ dependencies {
     implementation(platform(libs.jackson.bom))
     implementation(libs.jackson.databind)
     api(project(":geography"))
-    api(project(":data-system-serial-indices"))
+    api(project(":data-system-serial-indices-arrays"))
     implementation(project(":util"))
 }

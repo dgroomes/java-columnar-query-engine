@@ -142,6 +142,8 @@ General clean-ups, TODOs and things I wish to implement for this project:
      the physical data because that makes it possible for a substantially different query engine to code to its
      substantially and necessarily different physical data model. For example, Neo4J (Cypher engine and vertices/edges
      data model).
+   * IN PROGRESS Rename `data-system-serial-indices` to `data-system-serial-indices-arrays`.
+   * Clean up package and module names.
    * Update docs as appropriate.
    * Plan future work like a test fixture (harness?) that defines the functional tests but does not code to a specific
      implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection (does JUnit5 have

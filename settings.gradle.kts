@@ -4,7 +4,7 @@ include(
     ":app",
     ":data-model-in-memory",
     ":data-system",
-    ":data-system-serial-indices",
+    ":data-system-serial-indices-arrays",
     ":geography",
     ":geography-loader",
     ":util")
