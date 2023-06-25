@@ -1,5 +1,6 @@
 package dgroomes.queryengine;
 
+import dgroomes.data_system_serial_indices_arrays.DataSystemSerialIndices;
 import dgroomes.datasystem.*;
 import dgroomes.datasystem.QueryResult.Failure;
 import dgroomes.datasystem.QueryResult.Success;

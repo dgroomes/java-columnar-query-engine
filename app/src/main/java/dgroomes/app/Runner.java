@@ -12,7 +12,7 @@ import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.inmemory.InMemoryTable;
 import dgroomes.loader.GeographiesLoader;
 import dgroomes.loader.StateData;
-import dgroomes.queryengine.DataSystemSerialIndices;
+import dgroomes.data_system_serial_indices_arrays.DataSystemSerialIndices;
 import dgroomes.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

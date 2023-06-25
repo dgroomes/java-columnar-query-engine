@@ -3,6 +3,6 @@ module dgroomes.geographyloader {
   requires com.fasterxml.jackson.databind;
   requires org.slf4j;
   requires dgroomes.util;
-  requires dgroomes.queryengine;
+  requires dgroomes.data_system_serial_indices_arrays;
   exports dgroomes.loader;
 }
