@@ -133,15 +133,15 @@ General clean-ups, TODOs and things I wish to implement for this project:
      writes and is durable and has more features. This is more like a "query engine for ephemeral data").
    * DONE Move `QueryResult match(Query query, Table table)` out of `Executor` and into `data-system`.
    * DONE Rename `query-engine` to something like `data-system-serial-indices` ... and follow-on renames like classes.
-   * The data system should encapsulate the table. The API should become `QueryResult match(Query query)`. While it is
+   * DONE The data system should encapsulate the table. The API should become `QueryResult match(Query query)`. While it is
      convenient to allow the caller to inject their own physical data model (e.g. `InMemoryTable` in this case), that
      should be encapsulated by the data system (see the earlier language I used to describe a data system). And actually
      `data-system-serial-indices` should really be `data-system-serial-indices-arrays` which makes way for things like
      `data-system-serial-indices-arrow` and `data-system-serial-indices-foreign-memory`. I actually want to extract the
-     common "indices-" query engine again... but anyway this is progress. It's imporant that the data system encapsulates
+     common "indices-" query engine again... but anyway this is progress. It's important that the data system encapsulates
      the physical data because that makes it possible for a substantially different query engine to code to its
      substantially and necessarily different physical data model. For example, Neo4J (Cypher engine and vertices/edges
-     data model)
+     data model).
    * Update docs as appropriate.
    * Plan future work like a test fixture (harness?) that defines the functional tests but does not code to a specific
      implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection (does JUnit5 have
@@ -182,6 +182,10 @@ General clean-ups, TODOs and things I wish to implement for this project:
   as "won't do".
 * [ ] Fully implement boolean support. (remember we want to support 1-bit (boolean), 32-bit (int) and variable length
   (string)).
+* [ ] Consider using ZCTA (ZIP Code Tabulation Areas) instead of raw ZIP code data. ZCTA is a trademark of the US Census,
+  and it represents an area whereas a ZIP code does not because it describes mail delivery routes. With area data, we can
+  get into other area entities like counties. This is interesting for queries. Also, the data is well-described and
+  official. See [the related page on the Census website](https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html).
 
 
 ## Finished Wish List Items

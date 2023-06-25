@@ -5,6 +5,7 @@ import dgroomes.datasystem.QueryResult.Failure;
 import dgroomes.datasystem.QueryResult.Success;
 import dgroomes.inmemory.InMemoryColumn;
 import dgroomes.inmemory.InMemoryColumn.StringColumn;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static dgroomes.inmemory.InMemoryColumn.ofInts;
@@ -22,7 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class QueryTest {
 
-    private final DataSystemSerialIndices dataSystem = new DataSystemSerialIndices();
+    private DataSystemSerialIndices dataSystem;
+
+    @BeforeEach
+    void setUp() {
+        dataSystem = new DataSystemSerialIndices();
+    }
 
     /**
      * Ordinal integer query over a single-column table.
@@ -31,11 +37,12 @@ public class QueryTest {
     void intQuery_oneColumnTable() {
         // Arrange
         var table = ofColumns(ofInts(-1, 0, 1, 2, 3));
-        var query = new Query();
+        dataSystem.register("ints", table);
+        var query = new Query("ints");
         query.rootNode.addCriteria(new Criteria.IntCriteria(0, i1 -> i1 > 0));
 
         // Act
-        QueryResult result = dataSystem.execute(query, table);
+        QueryResult result = dataSystem.execute(query);
 
         // Assert
         var columns = switch (result) {
@@ -76,11 +83,12 @@ public class QueryTest {
 
                 // City populations
                 ofInts(425_336, 121_395, 86_697));
-        var query = new Query();
+        dataSystem.register("cities", table);
+        var query = new Query("cities");
         query.rootNode.addCriteria(new Criteria.IntCriteria(1, pop -> pop > 100_000 && pop < 150_000));
 
         // Act
-        QueryResult result = dataSystem.execute(query, table);
+        QueryResult result = dataSystem.execute(query);
 
         // Assert
         var columns = switch (result) {
@@ -108,14 +116,15 @@ public class QueryTest {
         // We're going to search over a simple collection of strings to find those that are greater than "a" but less than
         // "d". This test case is interesting because we're exercising two criteria in a single query.
         var table = ofColumns(ofStrings("a", "a", "b", "c", "c", "d"));
+        dataSystem.register("strings", table);
 
-        var query = new Query();
+        var query = new Query("strings");
         query.rootNode
                 .addCriteria(new Criteria.StringCriteria(0, s -> s.compareTo("a") > 0))
                 .addCriteria(new Criteria.StringCriteria(0, s -> s.compareTo("d") < 0));
 
         // Act
-        QueryResult result = dataSystem.execute(query, table);
+        QueryResult result = dataSystem.execute(query);
 
         // Assert
         var columns = switch (result) {
@@ -140,7 +149,9 @@ public class QueryTest {
     @Test
     void queryOnAssociationProperty() {
         var cities = ofColumns(ofStrings("Minneapolis", "Pierre", "Duluth"));
+        dataSystem.register("cities", cities);
         var states = ofColumns(ofStrings("Minnesota", "South Dakota"));
+        dataSystem.register("states", states);
         // The "contained in" association from city to state. It is based on the index position of the cities and states
         // expressed above.
         cities.associateTo(states,
@@ -152,12 +163,12 @@ public class QueryTest {
 
         // Query for South Dakota cities
         {
-            var query = new Query();
+            var query = new Query("cities");
             Query.Node statesNode = query.rootNode.createChild(1);
             statesNode.addCriteria(new Criteria.StringCriteria(0, "South Dakota"::equals));
 
             // Act
-            QueryResult result = dataSystem.execute(query, cities);
+            QueryResult result = dataSystem.execute(query);
 
             // Assert
             var columns = switch (result) {
@@ -177,12 +188,12 @@ public class QueryTest {
 
         // Query for Minnesota cities
         {
-            var query = new Query();
+            var query = new Query("cities");
             Query.Node statesNode = query.rootNode.createChild(1);
             statesNode.addCriteria(new Criteria.StringCriteria(0, "Minnesota"::equals));
 
             // Act
-            QueryResult result = dataSystem.execute(query, cities);
+            QueryResult result = dataSystem.execute(query);
 
             // Assert
             var columns = switch (result) {
@@ -252,6 +263,7 @@ public class QueryTest {
                         "trees", "shrubs", "",
                         "", "", "",
                         "ferns", "shrubs", "trees"));
+        dataSystem.register("sections", sections);
 
         sections.associateTo(sections,
                 // The maple trees (0) are adjacent to the lilacs (1) and blank (3)
@@ -284,7 +296,7 @@ public class QueryTest {
         // Let's write the query. NOTE: it's not possible to express the "shrubs" adjacent to "ferns" in the API now. I
         // need to figure out how to implement that.
 
-        var query = new Query();
+        var query = new Query("sections");
         query.rootNode.addCriteria(new Criteria.StringCriteria(1, "trees"::equals))
                 .createChild(2)
                 .addCriteria(new Criteria.StringCriteria(1, "shrubs"::equals))
@@ -292,7 +304,7 @@ public class QueryTest {
                 .addCriteria(new Criteria.StringCriteria(1, "ferns"::equals));
 
         // Act
-        QueryResult result = dataSystem.execute(query, sections);
+        QueryResult result = dataSystem.execute(query);
 
         // Assert
         var columns = switch (result) {

@@ -5,10 +5,7 @@ import dgroomes.datasystem.Query;
 import dgroomes.datasystem.QueryResult;
 import dgroomes.datasystem.Table;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * An implementation of a {@link DataSystem} that is characterized by a serial execution strategy which relies on
@@ -18,8 +15,17 @@ public class DataSystemSerialIndices implements DataSystem {
 
     public final Verifier verifier;
 
+    private final Map<String, Table> tables = new HashMap<>();
+
     public DataSystemSerialIndices() {
         verifier = new Verifier();
+    }
+
+    /**
+     * Register a {@link Table} into the data system.
+     */
+    public void register(String tableName, Table table) {
+        tables.put(tableName, table);
     }
 
     /**
@@ -44,9 +50,13 @@ public class DataSystemSerialIndices implements DataSystem {
      * I don't care much about generics here. I just want to get something working.
      */
     @Override
-    public QueryResult execute(Query query, Table table) {
-        Objects.requireNonNull(query, "The 'query' argument must not be null");
-        Objects.requireNonNull(table, "The 'table' argument must not be null");
+    public QueryResult execute(Query query) {
+        if (!tables.containsKey(query.tableName)) {
+            var msg = "The query targets the table '%s' but that table is not registered".formatted(query.tableName);
+            return new QueryResult.Failure(msg);
+        }
+
+        Table table = tables.get(query.tableName);
 
         Verifier.VerificationResult verificationResult = verifier.verify(query, table);
 

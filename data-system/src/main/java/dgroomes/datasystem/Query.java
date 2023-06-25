@@ -17,8 +17,10 @@ import java.util.Map;
 public class Query {
 
     public final Node rootNode;
+    public final String tableName;
 
-    public Query() {
+    public Query(String tableName) {
+        this.tableName = tableName;
         this.rootNode = new Node();
     }
 

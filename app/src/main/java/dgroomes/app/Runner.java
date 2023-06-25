@@ -37,6 +37,7 @@ public class Runner {
     }
 
     public void execute() {
+        var dataSystem = new DataSystemSerialIndices();
 
         // Read the ZIP code data from the local JSON file.
         GeographyGraph geo;
@@ -103,6 +104,7 @@ public class Runner {
                 stateCodeColumn = new InMemoryColumn.StringColumn(stateCodes);
                 stateNameColumn = new InMemoryColumn.StringColumn(stateNames);
                 statesTable = InMemoryTable.ofColumns(stateCodeColumn, stateNameColumn);
+                dataSystem.register("states", statesTable);
             }
 
             // Load the city data into the in-memory format.
@@ -132,6 +134,7 @@ public class Runner {
 
                 cityNameColumn = new InMemoryColumn.StringColumn(cityNames);
                 citiesTable = InMemoryTable.ofColumns(cityNameColumn);
+                dataSystem.register("cities", citiesTable);
                 cityStateColumn = citiesTable.associateTo(statesTable, cityStateAssociations);
             }
 
@@ -158,6 +161,7 @@ public class Runner {
                 zipCodeColumn = new InMemoryColumn.IntegerColumn(codes);
                 zipPopulationColumn = new InMemoryColumn.IntegerColumn(populations);
                 zipsTable = InMemoryTable.ofColumns(zipCodeColumn, zipPopulationColumn);
+                dataSystem.register("zips", zipsTable);
                 zipCityColumn = zipsTable.associateTo(citiesTable, zipCityAssociations);
             }
 
@@ -218,12 +222,12 @@ public class Runner {
         }
 
         {
-            // Query the data using the 'query engine'.
+            // Query the data using the full 'data system' abstraction.
             //
             // Specifically, find all ZIP codes that have a population around 10,000 and are adjacent to a state with at
             // least one city named "Plymouth".
 
-            var query = new Query();
+            var query = new Query("zips");
             query.rootNode.addCriteria(new Criteria.IntCriteria(1, i -> i >= 10_000 && i < 10_100));
             query.rootNode.createChild(2) // Column 2 is the association column to cities.
                     .createChild(1) // Column 1 is the association column to states.
@@ -231,8 +235,7 @@ public class Runner {
                     .createChild(2) // Column 2 is the association column to cities.
                     .addCriteria(new Criteria.StringCriteria(0, "PLYMOUTH"::equals)); // Column 0 is the string column of city names.
 
-            var dataSystem = new DataSystemSerialIndices();
-            QueryResult queryResult = dataSystem.execute(query, zipsTable);
+            QueryResult queryResult = dataSystem.execute(query);
 
             switch (queryResult) {
                 case QueryResult.Success(var resultSet) -> {
@@ -248,15 +251,14 @@ public class Runner {
 
         {
             // Find all states named with "North" that are adjacent to a state with "South" that are adjacent to a state with "North".
-            var query = new Query();
+            var query = new Query("states");
             query.rootNode.addCriteria(new Criteria.StringCriteria(1, s -> s.contains("North"))) // Column 1 is the string column of state names.
                     .createChild(3) // Column 3 is the association column to other states.
                     .addCriteria(new Criteria.StringCriteria(1, s -> s.contains("South")))
                     .createChild(3)
                     .addCriteria(new Criteria.StringCriteria(1, s -> s.contains("North")));
 
-            var dataSystem = new DataSystemSerialIndices();
-            QueryResult queryResult = dataSystem.execute(query, statesTable);
+            QueryResult queryResult = dataSystem.execute(query);
 
             switch (queryResult) {
                 case QueryResult.Success(var resultSet) -> {
