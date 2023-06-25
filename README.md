@@ -67,9 +67,9 @@ The code is implemented across a few modules:
   * This module describes the API of the "read-only object datastore and query engine". It also defines the core
     interfaces of tables, columns and associations. A data system is characterized by its physical data strategy (e.g.
     a columnar SQL database) and its query execution strategy.
-* `data-system-serial-indices`
+* `data-system-serial-indices-arrays`
   * This module is an implementation of a data system. It is characterized by a serial-style (non-parallel) and indices-
-    tracking execution strategy. This is the most interesting module. 
+    tracking execution strategy and the physical data is laid out in arrays. This is the most interesting module. 
 * `data-model-in-memory`
   * This module is a concrete implementation of the data model API using in-memory data structures (i.e. no file IO).
 * `geography`
@@ -121,13 +121,13 @@ General clean-ups, TODOs and things I wish to implement for this project:
 
 * [ ] Create a parallel query engine. Parallelization would be cool, and it's just a natural thing to do with data
   workloads like this.
-* [ ] IN PROGRESS Re-package `query-engine`. I want a `data-system` module which is an API implemented by `query-engine`. `query-engine` is a "serial, indices-tracking
+* [x] DONE Re-package `query-engine`. I want a `data-system` module which is an API implemented by `query-engine`. `query-engine` is a "serial, indices-tracking
   query execution strategy" that implements the main database API. The overarching query API is this method signature:
   `QueryResult match(Query query, Table table)`. There can be multiple different query engine implementations, like a
   parallel one, one that tracks statistics and has heuristics, one for readability and trying new features. I think 
   creating more layers of abstraction within `query-engine` to accommodate different behavior will not scale well. It's
   ok to just re-implement some things for the sake of decoupling, interpretability, execution speed, and development
-  speed. Thinking more widely, I even want to just use SQLite, DuckDB etc as a form of a "query engine" and be able to
+  speed. Thinking more widely, I even want to just use SQLite, DuckDB, Kuzu etc as a form of a "query engine" and be able to
   benchmark the same workload between my query engine (and in-memory column model).
    * DONE Create `data-system` (it is purposely not called "database" because it is far from a database. A database supports
      writes and is durable and has more features. This is more like a "query engine for ephemeral data").
@@ -143,13 +143,14 @@ General clean-ups, TODOs and things I wish to implement for this project:
      substantially and necessarily different physical data model. For example, Neo4J (Cypher engine and vertices/edges
      data model).
    * DONE Rename `data-system-serial-indices` to `data-system-serial-indices-arrays`.
-   * IN PROGRESS Clean up package and module names.
-   * Update docs as appropriate.
-   * Plan future work like a test fixture (harness?) that defines the functional tests but does not code to a specific
-     implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection (does JUnit5 have
-     a good fit for this? Or, just do something plain old like a template method pattern) to allow the test to be
-     implemented by different query engines (e.g. `query-engine-serial` vs `query-engine-parallel`) AND different data
-     model implementations (e.g. `data-model-arrays` vs `data-model-arrow` vs `data-model-foreign-memory`).
+   * DONE Clean up package and module names.
+   * DONE Update docs as appropriate.
+   * DONE Plan future work.
+* [ ] "Test Compatibility Kit" (TCK). Create a test fixture (harness? TCK?) that defines functional query tests but does
+  not code to a specific implementation. In other words, make `QueryEngineTest` into `QueryTest` and use some indirection
+  (explore the JUnit5 and Gradle options for this. Or, just do something plain old like a template method pattern) to
+  allow the test to be implemented by different data systems (e.g. `data-system-serial-indices-arrays` or a future
+  `data-system-serial-indices-arrow` or `data-system-serial-indices-foreign-memory`).
 * [ ] (cosmetic) Consider renaming the project to something like "object-query-engine" or something more specific/descriptive.
 * [ ] (stretch) Consider compressing integer arrays with [this integer compression library](https://github.com/lemire/JavaFastPFOR) which
       uses the [(incubating) Java vector API](https://openjdk.org/jeps/426). This would be kind of epic.
