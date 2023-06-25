@@ -1,4 +1,4 @@
-package dgroomes.loader;
+package dgroomes.geography_loader;
 
 import dgroomes.geography.State;
 

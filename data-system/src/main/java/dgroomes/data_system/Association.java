@@ -1,4 +1,4 @@
-package dgroomes.datasystem;
+package dgroomes.data_system;
 
 /**
  * This is a key type. {@link Association} represents an association between two tables.

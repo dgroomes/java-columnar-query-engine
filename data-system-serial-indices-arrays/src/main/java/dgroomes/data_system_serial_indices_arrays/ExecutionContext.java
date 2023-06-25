@@ -1,9 +1,9 @@
 package dgroomes.data_system_serial_indices_arrays;
 
-import dgroomes.datasystem.Association;
-import dgroomes.datasystem.AssociationColumn;
-import dgroomes.datasystem.Criteria;
-import dgroomes.datasystem.Table;
+import dgroomes.data_system.Association;
+import dgroomes.data_system.AssociationColumn;
+import dgroomes.data_system.Criteria;
+import dgroomes.data_system.Table;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -14,7 +14,7 @@ import java.util.function.IntPredicate;
 /**
  * A verified and stateful representation of a query and its execution state.
  * <p>
- * This type comes after the {@link Criteria} and before the {@link dgroomes.datasystem.QueryResult}.
+ * This type comes after the {@link Criteria} and before the {@link dgroomes.data_system.QueryResult}.
  * I tried to get leverage from features like sealed classes, records and features like "pattern matching for switch"
  * I've struggled. In some cases, light usage of these things was helpful. But in other cases, I got mired in a rigid
  * type hierarchy and can rarely get exhaustive switches to fit.

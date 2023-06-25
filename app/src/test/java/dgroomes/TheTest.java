@@ -1,7 +1,7 @@
 package dgroomes;
 
 import dgroomes.geography.GeographyGraph;
-import dgroomes.loader.GeographiesLoader;
+import dgroomes.geography_loader.GeographiesLoader;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

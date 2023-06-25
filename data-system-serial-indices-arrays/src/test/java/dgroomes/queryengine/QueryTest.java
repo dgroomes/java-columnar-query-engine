@@ -1,17 +1,17 @@
 package dgroomes.queryengine;
 
 import dgroomes.data_system_serial_indices_arrays.DataSystemSerialIndices;
-import dgroomes.datasystem.*;
-import dgroomes.datasystem.QueryResult.Failure;
-import dgroomes.datasystem.QueryResult.Success;
-import dgroomes.inmemory.InMemoryColumn;
-import dgroomes.inmemory.InMemoryColumn.StringColumn;
+import dgroomes.data_system.*;
+import dgroomes.data_system.QueryResult.Failure;
+import dgroomes.data_system.QueryResult.Success;
+import dgroomes.in_memory.InMemoryColumn;
+import dgroomes.in_memory.InMemoryColumn.StringColumn;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static dgroomes.inmemory.InMemoryColumn.ofInts;
-import static dgroomes.inmemory.InMemoryColumn.ofStrings;
-import static dgroomes.inmemory.InMemoryTable.ofColumns;
+import static dgroomes.in_memory.InMemoryColumn.ofInts;
+import static dgroomes.in_memory.InMemoryColumn.ofStrings;
+import static dgroomes.in_memory.InMemoryTable.ofColumns;
 import static dgroomes.queryengine.TestUtil.failed;
 import static org.assertj.core.api.Assertions.assertThat;
 

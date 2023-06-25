@@ -1,11 +1,11 @@
 package dgroomes.data_system_serial_indices_arrays;
 
-import dgroomes.datasystem.AssociationColumn;
-import dgroomes.datasystem.Column;
-import dgroomes.datasystem.ColumnFilterable;
-import dgroomes.datasystem.Table;
-import dgroomes.datasystem.Criteria;
-import dgroomes.datasystem.Query;
+import dgroomes.data_system.AssociationColumn;
+import dgroomes.data_system.Column;
+import dgroomes.data_system.ColumnFilterable;
+import dgroomes.data_system.Table;
+import dgroomes.data_system.Criteria;
+import dgroomes.data_system.Query;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

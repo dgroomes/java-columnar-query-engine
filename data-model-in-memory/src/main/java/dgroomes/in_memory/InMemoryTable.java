@@ -1,8 +1,8 @@
-package dgroomes.inmemory;
+package dgroomes.in_memory;
 
-import dgroomes.datasystem.Association;
-import dgroomes.datasystem.Column;
-import dgroomes.datasystem.Table;
+import dgroomes.data_system.Association;
+import dgroomes.data_system.Column;
+import dgroomes.data_system.Table;
 
 import java.util.*;
 import java.util.stream.IntStream;

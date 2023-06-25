@@ -1,4 +1,4 @@
-package dgroomes.datasystem;
+package dgroomes.data_system;
 
 /**
  * An instance of {@link DataSystem} is a "read-only object datastore and query engine".

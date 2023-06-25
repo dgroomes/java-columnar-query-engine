@@ -1,4 +1,4 @@
-package dgroomes.datasystem;
+package dgroomes.data_system;
 
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;

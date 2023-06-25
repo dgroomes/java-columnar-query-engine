@@ -1,9 +1,9 @@
 package dgroomes.data_system_serial_indices_arrays;
 
-import dgroomes.datasystem.DataSystem;
-import dgroomes.datasystem.Query;
-import dgroomes.datasystem.QueryResult;
-import dgroomes.datasystem.Table;
+import dgroomes.data_system.DataSystem;
+import dgroomes.data_system.Query;
+import dgroomes.data_system.QueryResult;
+import dgroomes.data_system.Table;
 
 import java.util.*;
 

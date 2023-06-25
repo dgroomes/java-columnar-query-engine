@@ -1,17 +1,17 @@
 package dgroomes.app;
 
-import dgroomes.datasystem.Association;
-import dgroomes.datasystem.Criteria;
-import dgroomes.datasystem.Query;
-import dgroomes.datasystem.QueryResult;
+import dgroomes.data_system.Association;
+import dgroomes.data_system.Criteria;
+import dgroomes.data_system.Query;
+import dgroomes.data_system.QueryResult;
 import dgroomes.geography.City;
 import dgroomes.geography.GeographyGraph;
 import dgroomes.geography.State;
 import dgroomes.geography.Zip;
-import dgroomes.inmemory.InMemoryColumn;
-import dgroomes.inmemory.InMemoryTable;
-import dgroomes.loader.GeographiesLoader;
-import dgroomes.loader.StateData;
+import dgroomes.in_memory.InMemoryColumn;
+import dgroomes.in_memory.InMemoryTable;
+import dgroomes.geography_loader.GeographiesLoader;
+import dgroomes.geography_loader.StateData;
 import dgroomes.data_system_serial_indices_arrays.DataSystemSerialIndices;
 import dgroomes.util.Util;
 import org.slf4j.Logger;

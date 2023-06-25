@@ -1,4 +1,4 @@
-package dgroomes.datasystem;
+package dgroomes.data_system;
 
 sealed public interface Pointer {
     record Ordinal(int ordinal) implements Pointer {}
