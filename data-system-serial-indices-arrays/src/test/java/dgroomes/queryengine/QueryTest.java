@@ -1,9 +1,9 @@
 package dgroomes.queryengine;
 
-import dgroomes.data_system_serial_indices_arrays.DataSystemSerialIndices;
 import dgroomes.data_system.*;
 import dgroomes.data_system.QueryResult.Failure;
 import dgroomes.data_system.QueryResult.Success;
+import dgroomes.data_system_serial_indices_arrays.DataSystemSerialIndices;
 import dgroomes.in_memory.InMemoryColumn;
 import dgroomes.in_memory.InMemoryColumn.StringColumn;
 import org.junit.jupiter.api.BeforeEach;
@@ -178,7 +178,7 @@ public class QueryTest {
             };
 
             assertThat(columns).hasSize(2);
-            Column cityColumn = columns.get(0);
+            Column cityColumn = columns.getFirst();
 
             if (!(cityColumn instanceof StringColumn(var cityMatches))) {
                 throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());
@@ -197,13 +197,28 @@ public class QueryTest {
             QueryResult result = dataSystem.execute(query);
 
             // Assert
-            var columns = switch (result) {
-                case Failure(var msg) -> throw failed(msg);
-                case Success(var resultTable) -> resultTable.columns();
-            };
+            // This block of code is commented out because, while it compiles, it causes the following low-level JVM
+            // error at runtime.
+            //
+            // Caused by: java.lang.VerifyError: Inconsistent stackmap frames at branch target 494
+            // Exception Details:
+            //   Location:
+            //     dgroomes/queryengine/QueryTest.queryOnAssociationProperty()V @494: aload
+            //   Reason:
+            //     Type top (current frame, locals[9]) is not assignable to 'dgroomes/data_system/QueryResult$Failure' (stack map, locals[9])
+            //
+            // I don't know why this happens because I use the same block of code earlier in the test without a problem.
+            // So, to work around the issue, we'll just do a manual AssertJ assertion and a cast.
+            //
+            // var columns = switch (result) {
+            //     case Failure(var msg) -> throw failed(msg);
+            //     case Success(var resultTable) -> resultTable.columns();
+            // };
+            assertThat(result).isInstanceOf(Success.class);
+            var columns = ((Success) result).resultSet().columns();
 
             assertThat(columns).hasSize(2);
-            Column cityColumn = columns.get(0);
+            Column cityColumn = columns.getFirst();
 
             if (!(cityColumn instanceof StringColumn(var cityMatches))) {
                 throw failed("Expected a StringColumn but got a " + cityColumn.getClass().getSimpleName());

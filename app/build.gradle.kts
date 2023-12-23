@@ -19,18 +19,3 @@ dependencies {
 application {
     mainClass.set("dgroomes.app.Runner")
 }
-
-tasks {
-
-    withType<JavaExec> {
-        jvmArgs = listOf(
-            "--enable-preview"
-        )
-    }
-
-    test {
-        jvmArgs = listOf(
-            "--enable-preview"
-        )
-    }
-}

@@ -85,7 +85,7 @@ public class Verifier {
                     case ColumnFilterable.AssociationColumnFilterable ignored -> {
                         return new VerificationResult.IllegalQuery("Association columns can't be matched on with a scalar criteria.");
                     }
-                    case default ->
+                    default ->
                             throw new IllegalStateException("Unrecognized column type: %s. This is unexpected.".formatted(column.getClass().getName()));
                 }
 

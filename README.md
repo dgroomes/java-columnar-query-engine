@@ -104,7 +104,7 @@ could learn by building it from source and poking around. Although it's C++ so t
 
 Follow these instructions to build and run the example program:
 
-1. Use Java 19
+1. Pre-requisite: Java 21
 2. Build and run the program:
    * ```shell
      ./gradlew :app:run
@@ -162,8 +162,8 @@ General clean-ups, TODOs and things I wish to implement for this project:
 * [ ] (cosmetic) Implement some human readable descriptive toStrings for the domain types like Table, Column, etc.
 * [ ] (cosmetic) Criteria/criterion language. Consider it. singular/plural. I don't care much.
 * [ ] (stretch) Create a test fixtures module or maybe just a module built for testing. This will encapsulate the `TestUtil` class.
-* [ ] Upgrade to Java 20. WARNING: I got some serious JVM failures when trying this (I guess this is liable to happen
-  with preview features but I thought preview was more a statement of "this could chnage" not "this could fail").
+* [x] DONE (I narrowed the issue and just worked around it) Upgrade to Java 21. WARNING: I got some serious JVM failures when trying this (I guess this is liable to happen
+  with preview features but I thought preview was more a statement of "this could change" not "this could fail").
   Specifically I got the following.
   ```text
   Caused by: java.lang.VerifyError: Inconsistent stackmap frames at branch target 494
