@@ -69,7 +69,7 @@ The code is implemented across a few modules:
     a columnar SQL database) and its query execution strategy.
 * `data-system-serial-indices-arrays`
   * This module is an implementation of a data system. It is characterized by a serial-style (non-parallel) and indices-
-    tracking execution strategy and the physical data is laid out in arrays. This is the most interesting module. 
+    tracking execution strategy and the physical data is laid out in arrays. This is the most interesting module.
 * `data-model-in-memory`
   * This module is a concrete implementation of the data model API using in-memory data structures (i.e. no file IO).
 * `geography`
@@ -189,7 +189,14 @@ General clean-ups, TODOs and things I wish to implement for this project:
   and it represents an area whereas a ZIP code does not because it describes mail delivery routes. With area data, we can
   get into other area entities like counties. This is interesting for queries. Also, the data is well-described and
   official. See [the related page on the Census website](https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html).
-
+* [ ] Maybe create a data system using [Apache Calcite](https://calcite.apache.org/). Calcite has a model
+  for describing relational queries, and it has many implementations (i.e. adapters) to implement those queries,
+  including a simple "frontend" in-memory one. That's what I'll use.
+   * First I'll start with a proof-of-technology in its own module and not integrate it with the functional tests.
+   * Next, I'll actually load the geography data into (unfortuately yet another) POJO model and make a join query across
+     the entities.
+   * Next, I'll write a converter to convert the `Query` to a Calcite relational algrebra expression/object. I found this
+     is tricky because the user docs are not super amazing, however there are good JavaDocs (always hard to discover).
 
 ## Finished Wish List Items
 
